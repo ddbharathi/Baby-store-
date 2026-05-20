@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="PriceSnap"/>
+<meta name="theme-color" content="#111111"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>PriceSnap</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#111;background:#f5f5f5;min-height:100vh}
+input,select,button{font-family:inherit;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#111!important}
+input::placeholder{color:#ccc}
+.hdr{background:#fff;border-bottom:1px solid #e8e8e8;padding:0 14px;display:flex;align-items:center;justify-content:space-between;height:50px;position:sticky;top:0;z-index:100}
+.logo{font-weight:700;font-size:15px;letter-spacing:-.5px}
+.hdr-actions{display:flex;gap:6px}
+.tabs{display:flex;background:#efefef;border-radius:8px;padding:3px;margin:14px 14px 0}
+.tab{flex:1;padding:7px 0;border:none;border-radius:6px;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;background:transparent;color:#888}
+.tab.active{background:#fff;color:#111;box-shadow:0 1px 4px #0001}
+.badge{background:#111;color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;margin-left:4px}
+.subtabs{display:flex;border:1px solid #e0e0e0;border-radius:7px;overflow:hidden;margin:12px 14px}
+.stab{flex:1;padding:7px 0;border:none;font-weight:600;font-size:12px;cursor:pointer;background:#fff;color:#888}
+.stab.active{background:#111;color:#fff}
+.bar{display:flex;gap:8px;padding:0 14px 12px}
+.bar input,.bar select{border:1px solid #e0e0e0;border-radius:7px;padding:8px 10px;background:#fff;color:#111;flex:1;min-width:0}
+.bar select{flex:0 0 110px}
+.btn{cursor:pointer;border:none;border-radius:6px;font-weight:600;font-size:12px;padding:7px 12px;transition:opacity .1s}
+.btn-primary{background:#111;color:#fff}
+.btn-ghost{background:transparent;color:#666;border:1px solid #e0e0e0}
+.btn-danger{background:transparent;color:#e33;border:1px solid #fcc}
+.btn-dashed{width:100%;padding:11px;border:1.5px dashed #ddd;border-radius:8px;background:#fff;color:#999;font-weight:600;font-size:13px;cursor:pointer;margin-bottom:12px}
+.card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;overflow:hidden;margin:0 14px 12px}
+.form-card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:14px;margin:0 14px 12px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.form-full{grid-column:1/-1}
+.flabel{display:block;font-size:11px;font-weight:600;color:#999;margin-bottom:4px;letter-spacing:.4px;text-transform:uppercase}
+.finput{width:100%;border:1px solid #e0e0e0;border-radius:6px;padding:9px 10px;background:#fff;color:#111}
+.entry{padding:12px 14px;border-bottom:1px solid #f5f5f5}
+.entry:last-child{border-bottom:none}
+.entry-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.entry-name{font-weight:600;word-break:break-word;flex:1}
+.entry-actions{display:flex;gap:4px;flex-shrink:0}
+.entry-meta{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:5px;font-size:12px;color:#888;align-items:center}
+.pill{display:inline-block;padding:1px 7px;border-radius:20px;font-size:11px;font-weight:600}
+.pill-green{background:#e8f5e9;color:#2a8a2a}
+.pill-gray{background:#f0f0f0;color:#666}
+.saved-pos{color:#2a8a2a;font-weight:600}
+.saved-neg{color:#d33;font-weight:600}
+.footer-note{padding:8px 14px;font-size:11px;color:#ccc;border-top:1px solid #f5f5f5}
+.cmp-card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;margin:0 14px 10px;overflow:hidden}
+.cmp-hdr{padding:12px 14px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center}
+.cmp-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.bar-row{margin-bottom:2px}
+.bar-label{display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px}
+.bar-track{height:4px;background:#f0f0f0;border-radius:99px}
+.bar-fill{height:100%;border-radius:99px}
+.p-row{padding:11px 14px;border-bottom:1px solid #f5f5f5;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.p-row:last-child{border-bottom:none}
+.p-name{font-weight:600}
+.p-sub{font-size:11px;color:#bbb;margin-top:1px}
+.p-price{font-weight:600;font-size:13px;white-space:nowrap}
+.p-done{opacity:.4}
+.p-done .p-name{text-decoration:line-through;color:#888}
+.toast{position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:999;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 2px 12px #0002;pointer-events:none}
+.toast-ok{background:#f0faf0;border:1px solid #c3e6c3;color:#2a8a2a}
+.toast-err{background:#fff5f5;border:1px solid #fcc;color:#d33}
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f5f5f5}
+.sec-title{font-weight:600;font-size:13px}
+.wrap{padding-bottom:60px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const CATS=["Groceries","Electronics","Clothing","Medicines","Household","Other"];
+const TODAY=()=>new Date().toISOString().slice(0,10);
+const BLANK=()=>({name:"",store:"",price:"",buyingPrice:"",category:"Groceries",date:TODAY(),note:""});
+const BLANK_P=()=>({name:"",qty:"1",store:"",targetPrice:"",category:"Groceries",note:""});
+function load(k,def){try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch{return def}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+let items=load("ps_items",[
+  {id:1,name:"Amul Butter 500g",store:"DMart",price:265,buyingPrice:265,category:"Groceries",date:"2026-05-01",note:""},
+  {id:2,name:"Amul Butter 500g",store:"BigBasket",price:280,buyingPrice:"",category:"Groceries",date:"2026-05-01",note:""},
+  {id:3,name:"Samsung 65W Charger",store:"Amazon",price:1349,buyingPrice:1349,category:"Electronics",date:"2026-05-10",note:"Deal"},
+  {id:4,name:"Dettol Handwash 250ml",store:"Reliance Smart",price:89,buyingPrice:85,category:"Household",date:"2026-05-15",note:"Coupon"},
+]);
+let list=load("ps_list",[
+  {id:1,name:"Tata Salt 1kg",qty:"2",store:"DMart",targetPrice:"22",category:"Groceries",note:"",done:false},
+  {id:2,name:"Colgate Toothpaste",qty:"1",store:"",targetPrice:"110",category:"Medicines",note:"",done:false},
+  {id:3,name:"Amul Milk 1L",qty:"3",store:"Any",targetPrice:"68",category:"Groceries",note:"Full cream",done:true},
+]);
+let nid=load("ps_nid",5),nlid=load("ps_nlid",4);
+let tab="prices",subTab="all",search="",cat="All";
+let showF=false,editId=null,form=BLANK();
+let showP=false,pEdit=null,pForm=BLANK_P();
+function persist(){save("ps_items",items);save("ps_list",list);save("ps_nid",nid);save("ps_nlid",nlid);}
+let toastTimer;
+function toast(msg,err){
+  let el=document.getElementById("toast");
+  if(!el){el=document.createElement("div");el.id="toast";document.body.appendChild(el);}
+  el.className="toast "+(err?"toast-err":"toast-ok");
+  el.textContent=msg;el.style.display="block";
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>{el.style.display="none"},2600);
+}
+function grouped(){const g={};items.forEach(i=>{(g[i.name]=g[i.name]||[]).push(i);});return g;}
+function best(name){const g=grouped()[name]||[];return g.reduce((m,i)=>i.price<m.price?i:m,g[0]);}
+function filteredItems(){return items.filter(i=>(cat==="All"||i.category===cat)&&(i.name.toLowerCase().includes(search.toLowerCase())||i.store.toLowerCase().includes(search.toLowerCase())));}
+function pending(){return list.filter(x=>!x.done);}
+function done(){return list.filter(x=>x.done);}
+function budget(){return pending().reduce((s,x)=>s+(+x.targetPrice||0)*(+x.qty||1),0);}
+function inr(n){return Number(n).toLocaleString("en-IN");}
+function saveItem(){
+  if(!form.name.trim()||!form.store.trim()||!form.price){toast("Fill name, store & market price",true);return;}
+  const e={...form,price:+form.price,buyingPrice:form.buyingPrice!==""?+form.buyingPrice:""};
+  if(editId!=null){items=items.map(i=>i.id===editId?{...e,id:editId}:i);toast("Updated");}
+  else{items=[...items,{...e,id:nid}];nid++;toast("Added");}
+  form=BLANK();editId=null;showF=false;persist();render();
+}
+function delItem(id){items=items.filter(i=>i.id!==id);persist();render();toast("Deleted");}
+function openEdit(item){form={...item,price:String(item.price),buyingPrice:item.buyingPrice!==""?String(item.buyingPrice):""};editId=item.id;showF=true;render();window.scrollTo({top:0,behavior:"smooth"});}
+function quickAdd(item){
+  if(list.find(x=>x.name===item.name&&!x.done)){toast("Already in list",true);return;}
+  list=[...list,{...BLANK_P(),name:item.name,store:item.store,targetPrice:String(item.price),category:item.category,id:nlid,done:false}];
+  nlid++;persist();toast("Added to tomorrow's list");render();
+}
+function saveP(){
+  if(!pForm.name.trim()){toast("Enter product name",true);return;}
+  if(pEdit!=null){list=list.map(x=>x.id===pEdit?{...pForm,id:pEdit,done:x.done}:x);toast("Updated");}
+  else{list=[...list,{...pForm,id:nlid,done:false}];nlid++;toast("Added");}
+  pForm=BLANK_P();pEdit=null;showP=false;persist();render();
+}
+function delP(id){list=list.filter(x=>x.id!==id);persist();render();toast("Removed");}
+function openPEdit(item){pForm={...item};pEdit=item.id;showP=true;render();}
+function toggleP(id){list=list.map(x=>x.id===id?{...x,done:!x.done}:x);persist();render();}
+function clearDone(){list=list.filter(x=>!x.done);persist();render();}
+function exportXL(){
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(items.map(i=>({
+    "Product Name":i.name,"Store":i.store,"Market Price (₹)":i.price,
+    "Buying Price (₹)":i.buyingPrice||"","Category":i.category,"Date":i.date,"Note":i.note,
+  }))),"Price Tracker");
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(list.map(x=>({
+    "Product Name":x.name,"Qty":x.qty,"Store":x.store,
+    "Target Price (₹)":x.targetPrice,"Category":x.category,"Note":x.note,"Status":x.done?"Done":"Pending",
+  }))),"Tomorrow's List");
+  XLSX.writeFile(wb,"PriceSnap.xlsx");toast("Exported");
+}
+function importXL(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:"binary"});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      let id=nid;
+      const mapped=XLSX.utils.sheet_to_json(ws).map(r=>({
+        id:id++,name:r["Product Name"]||r["name"]||"",store:r["Store"]||r["store"]||"",
+        price:+(r["Market Price (₹)"]||r["Price (₹)"]||r["price"]||0),
+        buyingPrice:r["Buying Price (₹)"]!==undefined?+r["Buying Price (₹)"]:"",
+        category:r["Category"]||r["category"]||"Other",
+        date:r["Date"]||r["date"]||TODAY(),note:r["Note"]||r["note"]||"",
+      })).filter(r=>r.name&&r.store);
+      items=[...items,...mapped];nid=id;persist();toast(`Imported ${mapped.length} rows`);render();
+    }catch{toast("Import failed",true);}
+  };
+  r.readAsBinaryString(f);e.target.value="";
+}
+function h(tag,attrs,inner){
+  const el=document.createElement(tag);
+  Object.entries(attrs||{}).forEach(([k,v])=>{
+    if(k==="class")el.className=v;
+    else if(k.startsWith("on"))el.addEventListener(k.slice(2).toLowerCase(),v);
+    else el.setAttribute(k,v);
+  });
+  if(typeof inner==="string")el.innerHTML=inner;
+  else if(Array.isArray(inner))inner.filter(Boolean).forEach(c=>c&&el.appendChild(c));
+  else if(inner)el.appendChild(inner);
+  return el;
+}
+function btn(label,cls,onclick,title){const b=h("button",{"class":"btn "+cls,onclick},label);if(title)b.title=title;return b;}
+function inp(type,val,placeholder,onchange){const el=h("input",{type,placeholder:placeholder||"","class":"finput"});el.value=val||"";el.addEventListener("input",onchange);return el;}
+function sel(options,val,onchange){const el=h("select",{"class":"finput"});options.forEach(o=>{const opt=document.createElement("option");opt.value=o;opt.textContent=o;if(o===val)opt.selected=true;el.appendChild(opt);});el.addEventListener("change",onchange);return el;}
+function field(label,child){const w=document.createElement("div");w.appendChild(h("span",{"class":"flabel"},label));w.appendChild(child);return w;}
+function renderForm(){
+  if(!showF)return null;
+  const wrap=h("div",{"class":"form-card"},[]);
+  wrap.appendChild(h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"},[
+    h("span",{style:"font-weight:700"},editId!=null?"Edit Entry":"New Entry"),
+    btn("✕","btn-ghost",()=>{showF=false;editId=null;form=BLANK();render();})
+  ]));
+  const grid=h("div",{"class":"form-grid"},[
+    field("Product Name *",inp("text",form.name,"e.g. Amul Butter",e=>{form.name=e.target.value;})),
+    field("Store *",inp("text",form.store,"e.g. DMart",e=>{form.store=e.target.value;})),
+    field("Market Price (₹) *",inp("number",form.price,"265",e=>{form.price=e.target.value;})),
+    field("Buying Price (₹)",inp("number",form.buyingPrice,"Actual paid",e=>{form.buyingPrice=e.target.value;})),
+    field("Category",sel(CATS,form.category,e=>{form.category=e.target.value;})),
+    field("Date",inp("date",form.date,"",e=>{form.date=e.target.value;})),
+  ]);
+  const fullNote=document.createElement("div");fullNote.className="form-full";fullNote.appendChild(field("Note",inp("text",form.note,"Optional",e=>{form.note=e.target.value;})));
+  grid.appendChild(fullNote);
+  wrap.appendChild(grid);
+  const sb=btn(editId!=null?"Save Changes":"Add Entry","btn-primary",saveItem);
+  sb.style.cssText="width:100%;padding:10px;font-size:13px";
+  wrap.appendChild(sb);
+  return wrap;
+}
+function renderPForm(){
+  if(!showP){
+    const w=document.createElement("div");w.style="margin:0 14px";
+    const db=h("button",{"class":"btn-dashed",onclick:()=>{showP=true;pEdit=null;pForm=BLANK_P();render();}},"+ Add item to tomorrow's list");
+    w.appendChild(db);return w;
+  }
+  const wrap=h("div",{"class":"form-card"},[]);
+  wrap.appendChild(h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"},[
+    h("span",{style:"font-weight:700"},pEdit!=null?"Edit Item":"Add Item"),
+    btn("✕","btn-ghost",()=>{showP=false;pEdit=null;pForm=BLANK_P();render();})
+  ]));
+  const grid=h("div",{"class":"form-grid"},[
+    field("Product Name *",inp("text",pForm.name,"Tata Salt 1kg",e=>{pForm.name=e.target.value;})),
+    field("Qty",inp("number",pForm.qty,"1",e=>{pForm.qty=e.target.value;})),
+    field("Store",inp("text",pForm.store,"DMart / Any",e=>{pForm.store=e.target.value;})),
+    field("Target Price (₹)",inp("number",pForm.targetPrice,"Max you'll pay",e=>{pForm.targetPrice=e.target.value;})),
+    field("Category",sel(CATS,pForm.category,e=>{pForm.category=e.target.value;})),
+  ]);
+  const fn=document.createElement("div");fn.className="form-full";fn.appendChild(field("Note",inp("text",pForm.note,"Optional",e=>{pForm.note=e.target.value;})));
+  grid.appendChild(fn);
+  wrap.appendChild(grid);
+  const sb=btn(pEdit!=null?"Save Changes":"Add to List","btn-primary",saveP);
+  sb.style.cssText="width:100%;padding:10px;font-size:13px";
+  wrap.appendChild(sb);
+  return wrap;
+}
+function renderPrices(){
+  const frag=document.createDocumentFragment();
+  const stWrap=h("div",{"class":"subtabs"},[]);
+  [["all","List"],["compare","Compare"]].forEach(([v,l])=>{
+    stWrap.appendChild(h("button",{"class":"stab"+(subTab===v?" active":""),onclick:()=>{subTab=v;render();}},l));
+  });
+  frag.appendChild(stWrap);
+  const bar=h("div",{"class":"bar"},[]);
+  const si=h("input",{type:"text",placeholder:"Search…"});si.value=search;si.addEventListener("input",e=>{search=e.target.value;render();});
+  const cs=h("select",{});["All",...CATS].forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;if(c===cat)o.selected=true;cs.appendChild(o);});
+  cs.style.flex="0 0 110px";cs.addEventListener("change",e=>{cat=e.target.value;render();});
+  bar.appendChild(si);bar.appendChild(cs);frag.appendChild(bar);
+  const fm=renderForm();if(fm)frag.appendChild(fm);
+  if(subTab==="all"){
+    const rows=filteredItems(),g=grouped();
+    const card=h("div",{"class":"card"},[]);
+    if(!rows.length)card.appendChild(h("div",{style:"padding:36px;text-align:center;color:#ccc"},"No entries."));
+    rows.forEach(item=>{
+      const isBest=best(item.name)?.id===item.id&&(g[item.name]?.length>1);
+      const saved=item.buyingPrice!==""&&item.price!==+item.buyingPrice?item.price-+item.buyingPrice:null;
+      const row=h("div",{"class":"entry"},[]);
+      const top=h("div",{"class":"entry-top"},[]);
+      const nameWrap=h("div",{"class":"entry-name"},[]);
+      nameWrap.appendChild(document.createTextNode(item.name));
+      if(isBest)nameWrap.appendChild(h("span",{"class":"pill pill-green",style:"margin-left:6px"},"best"));
+      top.appendChild(nameWrap);
+      top.appendChild(h("div",{"class":"entry-actions"},[
+        btn("Edit","btn-ghost",()=>openEdit(item)),
+        btn("🛒","btn-ghost",()=>quickAdd(item),"Add to tomorrow's list"),
+        btn("✕","btn-danger",()=>delItem(item.id)),
+      ]));
+      row.appendChild(top);
+      const meta=h("div",{"class":"entry-meta"},[]);
+      const addS=(txt,style)=>{const s=h("span",{style:style||""},txt);meta.appendChild(s);};
+      addS(item.store);
+      addS("₹"+inr(item.price),"font-weight:600;color:#111");
+      if(item.buyingPrice!=="")addS("paid ₹"+inr(+item.buyingPrice));
+      if(saved!=null)meta.appendChild(h("span",{"class":saved>0?"saved-pos":saved<0?"saved-neg":""},saved>0?`saved ₹${saved}`:saved<0?`over ₹${Math.abs(saved)}`:"no change"));
+      meta.appendChild(h("span",{"class":"pill pill-gray"},item.category));
+      addS(item.date,"color:#ccc");
+      if(item.note)addS(item.note,"color:#bbb");
+      row.appendChild(meta);card.appendChild(row);
+    });
+    if(rows.length)card.appendChild(h("div",{"class":"footer-note"},`${rows.length} of ${items.length} · 🛒 adds to tomorrow's list`));
+    frag.appendChild(card);
+  } else {
+    const g=grouped();
+    const names=Object.keys(g).filter(n=>n.toLowerCase().includes(search.toLowerCase()));
+    if(!names.length)frag.appendChild(h("div",{"class":"card",style:"margin:0 14px;padding:36px;text-align:center;color:#ccc"},"No products yet."));
+    names.forEach(name=>{
+      const entries=[...g[name]].sort((a,b)=>a.price-b.price);
+      const min=entries[0].price,max=entries[entries.length-1].price,gap=max-min;
+      const card=h("div",{"class":"cmp-card"},[]);
+      const chdr=h("div",{"class":"cmp-hdr"},[]);
+      const cl=h("div",{},[]);
+      cl.appendChild(h("div",{style:"font-weight:700;font-size:14px"},name));
+      cl.appendChild(h("div",{style:"font-size:11px;color:#bbb;margin-top:1px"},`${entries[0].category} · ${entries.length} store${entries.length>1?"s":""}`));
+      chdr.appendChild(cl);
+      if(gap>0){const cr=h("div",{style:"text-align:right"},[]);cr.appendChild(h("div",{style:"font-size:11px;color:#bbb"},"save up to"));cr.appendChild(h("div",{style:"font-weight:700;color:#2a8a2a"},"₹"+inr(gap)));chdr.appendChild(cr);}
+      card.appendChild(chdr);
+      const body=h("div",{"class":"cmp-body"},[]);
+      entries.forEach((e,i)=>{
+        const pct=gap>0?((e.price-min)/gap)*100:0;
+        const brow=h("div",{"class":"bar-row"},[]);
+        const label=h("div",{"class":"bar-label"},[]);
+        const ls=h("span",{style:`color:${i===0?"#2a8a2a":"#555"};font-weight:${i===0?600:400}`},e.store);
+        if(i===0&&entries.length>1)ls.appendChild(h("span",{"class":"pill pill-green",style:"margin-left:5px"},"best"));
+        label.appendChild(ls);
+        label.appendChild(h("span",{style:`font-weight:600;color:${i===0?"#2a8a2a":"#111"}`},"₹"+inr(e.price)));
+        brow.appendChild(label);
+        const track=h("div",{"class":"bar-track"},[]);
+        track.appendChild(h("div",{"class":"bar-fill",style:`width:${100-pct}%;background:${i===0?"#2a8a2a":"#ddd"}`},[]));
+        brow.appendChild(track);body.appendChild(brow);
+      });
+      card.appendChild(body);frag.appendChild(card);
+    });
+  }
+  return frag;
+}
+function renderTomorrow(){
+  const frag=document.createDocumentFragment();
+  frag.appendChild(renderPForm());
+  const pend=pending(),dn=done(),bgt=budget();
+  if(pend.length){
+    const card=h("div",{"class":"card"},[]);
+    card.appendChild(h("div",{"class":"sec-hdr"},[
+      h("span",{"class":"sec-title"},`To Buy · ${pend.length} item${pend.length!==1?"s":""}`),
+      bgt?h("span",{style:"font-size:12px;color:#888"},"Est. ₹"+inr(bgt)):null,
+    ]));
+    pend.forEach(x=>{
+      const row=h("div",{"class":"p-row"},[]);
+      const cb=h("input",{type:"checkbox"});cb.style.cssText="width:17px;height:17px;cursor:pointer;accent-color:#111";
+      cb.addEventListener("change",()=>toggleP(x.id));
+      const info=h("div",{},[]);
+      info.appendChild(h("div",{"class":"p-name"},x.name+(+x.qty>1?` ×${x.qty}`:"")));
+      const sub=[x.store,x.note].filter(Boolean).join(" · ");
+      if(sub)info.appendChild(h("div",{"class":"p-sub"},sub));
+      const priceVal=x.targetPrice?`₹${inr(+x.targetPrice*(+x.qty||1))}`:"—";
+      const pr=h("div",{style:"display:flex;flex-direction:column;align-items:flex-end;gap:4px"},[
+        h("span",{"class":"p-price"},priceVal),
+        h("div",{style:"display:flex;gap:4px"},[btn("Edit","btn-ghost",()=>openPEdit(x)),btn("✕","btn-danger",()=>delP(x.id))]),
+      ]);
+      row.appendChild(cb);row.appendChild(info);row.appendChild(pr);card.appendChild(row);
+    });
+    frag.appendChild(card);
+  }
+  if(dn.length){
+    const card=h("div",{"class":"card"},[]);
+    card.appendChild(h("div",{"class":"sec-hdr"},[
+      h("span",{"class":"sec-title",style:"color:#aaa"},`Done (${dn.length})`),
+      btn("Clear","btn-ghost",clearDone),
+    ]));
+    dn.forEach(x=>{
+      const row=h("div",{"class":"p-row p-done"},[]);
+      const cb=h("input",{type:"checkbox"});cb.checked=true;cb.style.cssText="width:17px;height:17px;cursor:pointer;accent-color:#111";
+      cb.addEventListener("change",()=>toggleP(x.id));
+      const info=h("div",{},[]);
+      info.appendChild(h("div",{"class":"p-name"},x.name+(+x.qty>1?` ×${x.qty}`:"")));
+      const priceVal=x.targetPrice?`₹${inr(+x.targetPrice*(+x.qty||1))}`:"—";
+      const pr=h("div",{style:"display:flex;flex-direction:column;align-items:flex-end;gap:4px"},[
+        h("span",{"class":"p-price"},priceVal),btn("✕","btn-danger",()=>delP(x.id)),
+      ]);
+      row.appendChild(cb);row.appendChild(info);row.appendChild(pr);card.appendChild(row);
+    });
+    frag.appendChild(card);
+  }
+  if(!pend.length&&!dn.length)frag.appendChild(h("div",{"class":"card",style:"margin:0 14px;padding:40px;text-align:center;color:#ccc"},"Nothing here yet. Add items or tap 🛒 on any price entry."));
+  frag.appendChild(h("div",{style:"margin:12px 14px;padding:10px 12px;background:#f8f8f8;border-radius:7px;font-size:12px;color:#bbb"},"Export includes Price Tracker + Tomorrow's List as separate sheets."));
+  return frag;
+}
+function render(){
+  const app=document.getElementById("app");app.innerHTML="";
+  const hdr=h("div",{"class":"hdr"},[]);
+  hdr.appendChild(h("span",{"class":"logo"},"PriceSnap"));
+  const acts=h("div",{"class":"hdr-actions"},[]);
+  const fi=h("input",{type:"file",accept:".xlsx,.xls",style:"display:none"});
+  fi.addEventListener("change",importXL);acts.appendChild(fi);
+  acts.appendChild(btn("↓","btn-ghost",()=>fi.click(),"Import Excel"));
+  acts.appendChild(btn("↑","btn-ghost",exportXL,"Export Excel"));
+  acts.appendChild(btn("+ Add","btn-primary",()=>{
+    if(tab==="tomorrow"){showP=true;pEdit=null;pForm=BLANK_P();}
+    else{showF=true;editId=null;form=BLANK();}
+    render();
+  }));
+  hdr.appendChild(acts);app.appendChild(hdr);
+  const tabWrap=h("div",{"class":"tabs"},[]);
+  [["prices","Price Tracker"],["tomorrow","Tomorrow's List"]].forEach(([v,l])=>{
+    const b=h("button",{"class":"tab"+(tab===v?" active":""),onclick:()=>{tab=v;render();}});
+    b.textContent=l;
+    if(v==="tomorrow"&&pending().length){b.appendChild(h("span",{"class":"badge"},String(pending().length)));}
+    tabWrap.appendChild(b);
+  });
+  app.appendChild(tabWrap);
+  const wrap=h("div",{"class":"wrap",style:"margin-top:12px"},[]);
+  wrap.appendChild(tab==="prices"?renderPrices():renderTomorrow());
+  app.appendChild(wrap);
+}
+render();
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
