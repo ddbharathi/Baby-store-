@@ -189,6 +189,7 @@ loadData();
 
 let tt;
 function toast(msg,err){
+  const e = document.getElementById("toast");
   e.className="toast "+(err?"terr":"tok");
   e.textContent=msg;e.style.display="block";
   clearTimeout(tt);tt=setTimeout(()=>e.style.display="none",2400);
