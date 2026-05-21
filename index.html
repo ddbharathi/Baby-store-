@@ -478,6 +478,8 @@ if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serv
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
 </script>
-<script>
-alert("Test working");
+<script type="module">
+import app from './js/firebase.js';
+
+console.log("Firebase Connected");
 </script>
