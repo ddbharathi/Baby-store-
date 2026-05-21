@@ -1,21 +1,21 @@
 import app from './firebase.js';
 
 import {
-  getFirestore,
-  collection,
-  addDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  getDatabase,
+  ref,
+  set
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const db = getFirestore(app);
+const db = getDatabase(app);
 
-async function addProduct() {
-  await addDoc(collection(db, "products"), {
-    name: "Baby Dress",
-    price: 499,
-    image: "image-url"
-  });
+set(ref(db, 'products/test'), {
+  name: "Baby Dress",
+  price: 499
+})
+.then(() => {
+  alert("Firebase Working");
+})
+.catch((error) => {
+  alert(error);
+});
 
-  alert("Product Added");
-}
-
-addProduct();
