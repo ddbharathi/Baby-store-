@@ -128,17 +128,13 @@ input::placeholder{color:#ccc}
 <div id="app"></div>
 <div id="toast" class="toast"></div>
 <script>
-function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}}
-function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
 
-let products  = load("cat_products",[
-  {id:1,name:"100ml Itc",unit:"per packet",category:"Paper Cup",buyPrice:22,sellPrice:25,packetPrice:25,godown:"",note:""},
-  {id:2,name:"10x12",unit:"per bag",category:"Plastic Bag",buyPrice:15,sellPrice:20,packetPrice:20,godown:"",note:""},
-]);
-let categories = load("cat_cats",["Paper Cup","Plastic Bag","Thermocol Plate","Aluminum Foil"]);
-let purchases  = load("cat_purchases",[]);
-let npid  = load("cat_npid",3);
-let nppid = load("cat_nppid",1);
+// 1. Set up variables (removed localStorage)
+let products = [];
+let categories = ["Paper Cup","Plastic Bag","Thermocol Plate","Aluminum Foil"];
+let purchases = [];
+let npid = 3;
+let nppid = 1;
 
 let tab="catalogue", search="", filterCat="All";
 let openMenu=null, sheet=null, editId=null, editPId=null, newCat="";
@@ -146,11 +142,53 @@ let pf=blankP(), ppf=blankPP();
 
 function blankP(){return{name:"",unit:"per packet",category:"",buyPrice:"",sellPrice:"",packetPrice:"",godown:"",note:""};}
 function blankPP(){return{name:"",qty:"1",buyPrice:"",note:""};}
-function persist(){save("cat_products",products);save("cat_cats",categories);save("cat_purchases",purchases);save("cat_npid",npid);save("cat_nppid",nppid);}
+
+// 2. Fetch data from Firebase on load
+async function loadData() {
+  try {
+    const docSnap = await window.getDoc(window.doc(window.db, "appData", "catalogue"));
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      products = data.products || [];
+      categories = data.categories || categories;
+      purchases = data.purchases || [];
+      npid = data.npid || 3;
+      nppid = data.nppid || 1;
+    } else {
+      products = [
+        {id:1,name:"100ml Itc",unit:"per packet",category:"Paper Cup",buyPrice:22,sellPrice:25,packetPrice:25,godown:"",note:""},
+        {id:2,name:"10x12",unit:"per bag",category:"Plastic Bag",buyPrice:15,sellPrice:20,packetPrice:20,godown:"",note:""},
+      ];
+    }
+    render(); 
+  } catch (error) {
+    console.error("Firebase load error", error);
+    toast("Error loading cloud data", true);
+    render(); 
+  }
+}
+
+// 3. Save to Firebase instead of localStorage
+async function persist() {
+  try {
+    await window.setDoc(window.doc(window.db, "appData", "catalogue"), {
+      products: products,
+      categories: categories,
+      purchases: purchases,
+      npid: npid,
+      nppid: nppid
+    });
+  } catch (error) {
+    console.error("Firebase save error", error);
+    toast("Failed to sync to cloud", true);
+  }
+}
+
+// Trigger the load immediately
+loadData();
 
 let tt;
 function toast(msg,err){
-  const e=document.getElementById("toast");
   e.className="toast "+(err?"terr":"tok");
   e.textContent=msg;e.style.display="block";
   clearTimeout(tt);tt=setTimeout(()=>e.style.display="none",2400);
