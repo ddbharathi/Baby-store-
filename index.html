@@ -129,6 +129,16 @@ input::placeholder{color:#ccc}
 <div id="toast" class="toast"></div>
 <script>
 
+// --- ADD THIS KILL SWITCH ---
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    for(let registration of registrations) {
+      registration.unregister();
+    }
+  });
+}
+// ----------------------------
+
 // 1. Set up variables (removed localStorage)
 let products = [];
 let categories = ["Paper Cup","Plastic Bag","Thermocol Plate","Aluminum Foil"];
