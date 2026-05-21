@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="Catalogue"/>
+<meta name="theme-color" content="#ffffff"/>
+<link rel="manifest" href="manifest.json"/>
+<title>Catalogue</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#111;background:#f5f5f5;min-height:100vh;padding-bottom:30px}
+input,select,button{font-family:inherit;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#111!important}
+input::placeholder{color:#ccc}
+
+/* HEADER */
+.hdr{background:#fff;border-bottom:1px solid #e8e8e8;padding:0 14px;display:flex;align-items:center;justify-content:space-between;height:50px;position:sticky;top:0;z-index:100}
+.logo{font-weight:700;font-size:15px;letter-spacing:-.5px}
+.hdr-right{display:flex;gap:6px;align-items:center}
+
+/* TOP TABS */
+.toptabs{display:flex;background:#efefef;border-radius:10px;padding:3px;margin:12px 14px 0}
+.toptab{flex:1;padding:8px 0;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;background:transparent;color:#888;transition:all .15s;position:relative}
+.toptab.active{background:#fff;color:#111;box-shadow:0 1px 4px #0001}
+.tbadge{background:#111;color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;margin-left:4px}
+
+/* SEARCH + FILTER */
+.searchbar{display:flex;gap:8px;padding:10px 14px}
+.searchbar input{flex:1;border:1px solid #e0e0e0;border-radius:8px;padding:9px 12px;background:#fff;color:#111;font-size:14px}
+.searchbar select{flex:0 0 110px;border:1px solid #e0e0e0;border-radius:8px;padding:9px 10px;background:#fff;color:#111}
+
+/* PRODUCT CARDS */
+.cards{padding:0 14px;display:flex;flex-direction:column;gap:10px}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px #0001}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px}
+.card-name{font-size:16px;font-weight:800;flex:1;word-break:break-word}
+.card-meta{font-size:12px;color:#aaa;margin-bottom:10px}
+.cat-badge{background:#e0faf5;color:#0d9e8a;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;flex-shrink:0;margin-left:8px;white-space:nowrap}
+
+/* PRICE BOXES */
+.price-boxes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.pbox{border-radius:12px;padding:10px 4px;text-align:center}
+.pbox-label{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px}
+.pbox-val{font-size:16px;font-weight:800}
+.pbox-buy{background:#eff4ff}.pbox-buy .pbox-label{color:#7a9cf5}.pbox-buy .pbox-val{color:#3b6ef5}
+.pbox-sell{background:#f0faf5}.pbox-sell .pbox-label{color:#6dcfbd}.pbox-sell .pbox-val{color:#0d9e8a}
+.pbox-pkt{background:#f5f0ff}.pbox-pkt .pbox-label{color:#b08af5}.pbox-pkt .pbox-val{color:#7c3aed}
+
+/* CARD ACTIONS */
+.card-actions{display:flex;border-top:1px solid #f5f5f5;padding-top:10px;gap:0}
+.card-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border:none;background:transparent;color:#555;font-weight:600;font-size:13px;cursor:pointer;border-radius:8px}
+.card-btn:active{background:#f5f5f5}
+.card-btn-green{color:#0d9e8a}
+.card-divider{width:1px;background:#f0f0f0}
+
+/* 3-DOT */
+.dot-wrap{position:relative}
+.dot-btn{width:30px;height:30px;border-radius:8px;border:none;background:#f5f5f5;color:#555;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.dot-menu{position:absolute;top:34px;right:0;background:#fff;border-radius:12px;box-shadow:0 4px 20px #0002;z-index:200;min-width:130px;overflow:hidden}
+.dot-menu button{width:100%;padding:12px 16px;border:none;background:transparent;text-align:left;cursor:pointer;font-size:14px;font-weight:500}
+.dot-menu button:active{background:#f5f5f5}
+.dot-del{color:#e33}
+.dot-div{height:1px;background:#f5f5f5}
+
+/* PURCHASE LIST */
+.p-card{background:#fff;border-radius:12px;margin:0 14px 8px;padding:14px;box-shadow:0 1px 4px #0001}
+.p-row{display:flex;gap:10px;align-items:center}
+.p-check{width:20px;height:20px;flex-shrink:0;cursor:pointer;accent-color:#111}
+.p-name{font-weight:700;font-size:15px;flex:1}
+.p-sub{font-size:11px;color:#aaa;margin-top:2px}
+.p-done .p-name{text-decoration:line-through;color:#aaa}
+.p-done{opacity:.5}
+.p-price{font-weight:700;font-size:14px;color:#0d9e8a;white-space:nowrap}
+.p-acts{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.p-edit-btn{border:none;background:#f0f0f0;border-radius:6px;color:#555;font-size:12px;font-weight:600;padding:4px 10px;cursor:pointer}
+.p-del-btn{border:none;background:transparent;color:#e33;font-size:18px;cursor:pointer;line-height:1}
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 6px}
+.sec-title{font-size:12px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.4px}
+.clear-btn{border:none;background:transparent;color:#aaa;font-size:12px;font-weight:600;cursor:pointer}
+.add-p-btn{width:calc(100% - 28px);margin:4px 14px 12px;padding:11px;border:1.5px dashed #ddd;border-radius:10px;background:#fff;color:#999;font-weight:600;font-size:13px;cursor:pointer}
+
+/* IMPORT/EXPORT tab */
+.ie-wrap{padding:14px}
+.ie-card{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px #0001}
+.ie-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.ie-sub{font-size:12px;color:#aaa;margin-bottom:12px;line-height:1.6}
+.ie-btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px}
+.ie-green{background:#0d9e8a;color:#fff}
+.ie-gray{background:#f0f0f0;color:#333}
+
+/* SHEET */
+.overlay{position:fixed;inset:0;background:#0005;z-index:300;display:flex;align-items:flex-end}
+.sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 34px;width:100%;max-height:92vh;overflow-y:auto}
+.sheet-handle{width:36px;height:4px;background:#e0e0e0;border-radius:99px;margin:0 auto 16px}
+.sheet-title{font-size:17px;font-weight:800;margin-bottom:16px}
+.field{margin-bottom:12px}
+.flabel{display:block;font-size:11px;font-weight:700;color:#999;margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase}
+.finput{width:100%;border:1.5px solid #e8e8e8;border-radius:10px;padding:11px 12px;font-size:15px;color:#111;background:#fff}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.save-btn{width:100%;padding:14px;border:none;border-radius:12px;background:#111;color:#fff;font-size:16px;font-weight:700;cursor:pointer;margin-top:6px}
+.cancel-btn{width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:12px;background:#fff;color:#666;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px}
+
+/* BUTTONS */
+.hdr-btn{cursor:pointer;border:none;border-radius:7px;font-weight:600;font-size:12px;padding:7px 12px;background:transparent;color:#666;border:1px solid #e0e0e0}
+.hdr-add{background:#111;color:#fff;border:none}
+
+/* CAT MANAGE */
+.cat-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5}
+.cat-del{border:none;background:transparent;color:#e33;font-size:18px;cursor:pointer}
+.cat-add-row{display:flex;gap:8px;margin-top:12px}
+.cat-add-row input{flex:1;border:1.5px solid #e8e8e8;border-radius:10px;padding:10px 12px;font-size:14px}
+.cat-add-btn{padding:10px 16px;border:none;border-radius:10px;background:#111;color:#fff;font-weight:700;cursor:pointer}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 4px 16px #0003;display:none;pointer-events:none}
+.tok{background:#111;color:#fff}
+.terr{background:#e33;color:#fff}
+
+.empty{text-align:center;padding:48px 20px;color:#ccc;font-size:14px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast"></div>
+<script>
+
+// --- ADD THIS KILL SWITCH ---
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    for(let registration of registrations) {
+      registration.unregister();
+    }
+  });
+}
+// ----------------------------
+
+// 1. Set up variables (removed localStorage)
+let products = [];
+let categories = ["Paper Cup","Plastic Bag","Thermocol Plate","Aluminum Foil"];
+let purchases = [];
+let npid = 3;
+let nppid = 1;
+
+let tab="catalogue", search="", filterCat="All";
+let openMenu=null, sheet=null, editId=null, editPId=null, newCat="";
+let pf=blankP(), ppf=blankPP();
+
+function blankP(){return{name:"",unit:"per packet",category:"",buyPrice:"",sellPrice:"",packetPrice:"",godown:"",note:""};}
+function blankPP(){return{name:"",qty:"1",buyPrice:"",note:""};}
+
+// 2. Fetch data from Firebase on load
+async function loadData() {
+  try {
+    const docSnap = await window.getDoc(window.doc(window.db, "appData", "catalogue"));
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      products = data.products || [];
+      categories = data.categories || categories;
+      purchases = data.purchases || [];
+      npid = data.npid || 3;
+      nppid = data.nppid || 1;
+    } else {
+      products = [
+        {id:1,name:"100ml Itc",unit:"per packet",category:"Paper Cup",buyPrice:22,sellPrice:25,packetPrice:25,godown:"",note:""},
+        {id:2,name:"10x12",unit:"per bag",category:"Plastic Bag",buyPrice:15,sellPrice:20,packetPrice:20,godown:"",note:""},
+      ];
+    }
+    render(); 
+  } catch (error) {
+    console.error("Firebase load error", error);
+    toast("Error loading cloud data", true);
+    render(); 
+  }
+}
+
+// 3. Save to Firebase instead of localStorage
+async function persist() {
+  try {
+    await window.setDoc(window.doc(window.db, "appData", "catalogue"), {
+      products: products,
+      categories: categories,
+      purchases: purchases,
+      npid: npid,
+      nppid: nppid
+    });
+  } catch (error) {
+    console.error("Firebase save error", error);
+    toast("Failed to sync to cloud", true);
+  }
+}
+
+// Trigger the load immediately
+loadData();
+
+let tt;
+function toast(msg,err){
+  const e = document.getElementById("toast");
+  e.className="toast "+(err?"terr":"tok");
+  e.textContent=msg;e.style.display="block";
+  clearTimeout(tt);tt=setTimeout(()=>e.style.display="none",2400);
+}
+
+function inr(n){if(n===""||n===null||n===undefined)return"—";return"₹"+Number(n).toFixed(2);}
+function pendingCount(){return purchases.filter(p=>!p.done).length;}
+
+function saveProduct(){
+  if(!pf.name.trim()){toast("Enter product name",true);return;}
+  const e={...pf,buyPrice:pf.buyPrice!==""?+pf.buyPrice:"",sellPrice:pf.sellPrice!==""?+pf.sellPrice:"",packetPrice:pf.packetPrice!==""?+pf.packetPrice:""};
+  if(editId!=null){products=products.map(p=>p.id===editId?{...e,id:editId}:p);toast("Updated");}
+  else{products=[...products,{...e,id:npid}];npid++;toast("Product added");}
+  pf=blankP();editId=null;sheet=null;persist();render();
+}
+function delProduct(id){products=products.filter(p=>p.id!==id);purchases=purchases.filter(p=>p.productId!==id);openMenu=null;persist();render();toast("Deleted");}
+function openEdit(p){pf={...p,buyPrice:p.buyPrice!==""?String(p.buyPrice):"",sellPrice:p.sellPrice!==""?String(p.sellPrice):"",packetPrice:p.packetPrice!==""?String(p.packetPrice):""};editId=p.id;sheet="product";openMenu=null;render();}
+function addToPurchase(p){
+  if(purchases.find(x=>x.productId===p.id&&!x.done)){toast("Already in purchase list",true);return;}
+  purchases=[...purchases,{id:nppid,productId:p.id,name:p.name,qty:"1",buyPrice:String(p.buyPrice||""),note:"",done:false}];
+  nppid++;persist();toast("Added to purchase list");render();
+}
+function savePurchase(){
+  if(!ppf.name.trim()){toast("Enter product name",true);return;}
+  if(editPId!=null){purchases=purchases.map(p=>p.id===editPId?{...ppf,id:editPId,done:p.done}:p);toast("Updated");}
+  else{purchases=[...purchases,{...ppf,id:nppid,done:false}];nppid++;toast("Added");}
+  ppf=blankPP();editPId=null;sheet=null;persist();render();
+}
+function toggleP(id){purchases=purchases.map(p=>p.id===id?{...p,done:!p.done}:p);persist();render();}
+function delP(id){purchases=purchases.filter(p=>p.id!==id);persist();render();toast("Removed");}
+function clearDone(){purchases=purchases.filter(p=>!p.done);persist();render();}
+function addCat(){const c=newCat.trim();if(!c){toast("Enter name",true);return;}if(categories.includes(c)){toast("Already exists",true);return;}categories=[...categories,c];newCat="";persist();render();}
+function delCat(c){categories=categories.filter(x=>x!==c);persist();render();}
+
+function exportXL(){
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(products.map(p=>({
+    "Product Name":p.name,"Unit":p.unit,"Category":p.category,
+    "Buy Price (₹)":p.buyPrice,"Sell Price (₹)":p.sellPrice,"Packet Price (₹)":p.packetPrice,
+    "Godown":p.godown,"Note":p.note,
+  }))),"Catalogue");
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(purchases.map(p=>({
+    "Product":p.name,"Qty":p.qty,"Buy Price (₹)":p.buyPrice,"Note":p.note,"Status":p.done?"Done":"Pending",
+  }))),"Purchase List");
+  XLSX.writeFile(wb,"Catalogue.xlsx");toast("Exported");
+}
+function importXL(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:"binary"});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      let id=npid;
+      const mapped=XLSX.utils.sheet_to_json(ws).map(r=>({
+        id:id++,name:r["Product Name"]||"",unit:r["Unit"]||"per packet",category:r["Category"]||"",
+        buyPrice:r["Buy Price (₹)"]!==undefined?+r["Buy Price (₹)"]:"",
+        sellPrice:r["Sell Price (₹)"]!==undefined?+r["Sell Price (₹)"]:"",
+        packetPrice:r["Packet Price (₹)"]!==undefined?+r["Packet Price (₹)"]:"",
+        godown:r["Godown"]||"",note:r["Note"]||"",
+      })).filter(r=>r.name);
+      products=[...products,...mapped];npid=id;persist();toast(`Imported ${mapped.length} products`);render();
+    }catch{toast("Import failed",true);}
+  };
+  r.readAsBinaryString(f);e.target.value="";
+}
+
+// ── DOM helpers ──────────────────────────────────────────────────────────────
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;}
+function on(e,ev,fn){e.addEventListener(ev,fn);return e;}
+function inp(val,ph,onchange,type){
+  const e=el("input","finput");e.type=type||"text";e.placeholder=ph||"";e.value=val||"";
+  e.addEventListener("input",onchange);return e;
+}
+function selEl(opts,val,onchange){
+  const e=el("select","finput");
+  opts.forEach(o=>{const op=document.createElement("option");op.value=o.v||o;op.textContent=o.l||o;if((o.v||o)===val)op.selected=true;e.appendChild(op);});
+  e.addEventListener("change",onchange);return e;
+}
+function field(label,child,cls){const w=el("div","field"+(cls?" "+cls:""));w.appendChild(el("span","flabel",label));w.appendChild(child);return w;}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function render(){
+  const app=document.getElementById("app");app.innerHTML="";
+
+  // Header
+  const hdr=el("div","hdr");
+  hdr.appendChild(el("span","logo","Catalogue"));
+  const hr=el("div","hdr-right");
+  const fi=el("input","");fi.type="file";fi.accept=".xlsx,.xls";fi.style.display="none";fi.addEventListener("change",importXL);
+  hr.appendChild(fi);
+  hr.appendChild(on(el("button","hdr-btn","↓"),  "click",()=>fi.click()));
+  hr.appendChild(on(el("button","hdr-btn","↑"),  "click",exportXL));
+  hr.appendChild(on(el("button","hdr-btn hdr-add","+ Add"),"click",()=>{
+    if(tab==="purchase"){ppf=blankPP();editPId=null;sheet="purchase";}
+    else{pf=blankP();editId=null;sheet="product";}
+    render();
+  }));
+  hdr.appendChild(hr);app.appendChild(hdr);
+
+  // Top tabs
+  const tabs=el("div","toptabs");
+  [["catalogue","Catalogue"],["purchase","Purchase List"],["importexport","Import / Export"]].forEach(([v,l])=>{
+    const b=el("button","toptab"+(tab===v?" active":""),l);
+    if(v==="purchase"&&pendingCount()){const bd=el("span","tbadge",String(pendingCount()));b.appendChild(bd);}
+    b.addEventListener("click",()=>{tab=v;openMenu=null;render();});
+    tabs.appendChild(b);
+  });
+  app.appendChild(tabs);
+
+  // ── CATALOGUE ──────────────────────────────────────────────────────────
+  if(tab==="catalogue"){
+    const sb=el("div","searchbar");
+    const si=el("input","");si.placeholder="Search products...";si.value=search;si.style.cssText="flex:1;border:1px solid #e0e0e0;border-radius:8px;padding:9px 12px;background:#fff;font-size:14px;color:#111";
+    si.addEventListener("input",e=>{search=e.target.value;render();});
+    const cs=selEl(["All",...categories],filterCat,e=>{filterCat=e.target.value;render();});
+    cs.className="";cs.style.cssText="flex:0 0 110px;border:1px solid #e0e0e0;border-radius:8px;padding:9px 10px;background:#fff;color:#111;font-size:14px";
+    sb.appendChild(si);sb.appendChild(cs);app.appendChild(sb);
+
+    const cards=el("div","cards");
+    const filtered=products.filter(p=>
+      (filterCat==="All"||p.category===filterCat)&&
+      (p.name.toLowerCase().includes(search.toLowerCase())||(p.category||"").toLowerCase().includes(search.toLowerCase()))
+    );
+    if(!filtered.length){cards.appendChild(el("div","empty","No products yet. Tap + Add to start."));}
+    filtered.forEach(p=>{
+      const card=el("div","card");
+      const ctop=el("div","card-top");
+      ctop.appendChild(el("div","card-name",p.name));
+      const tr=el("div","");tr.style.cssText="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px";
+      if(p.category)tr.appendChild(el("span","cat-badge",p.category));
+      // 3-dot
+      const dw=el("div","dot-wrap");
+      const db=el("button","dot-btn","⋮");
+      db.addEventListener("click",e=>{e.stopPropagation();openMenu=openMenu===p.id?null:p.id;render();});
+      dw.appendChild(db);
+      if(openMenu===p.id){
+        const dm=el("div","dot-menu");
+        const eb=el("button","","✏️  Edit");eb.addEventListener("click",()=>openEdit(p));
+        const dd=el("div","dot-div");
+        const dlb=el("button","dot-del","🗑️  Delete");dlb.addEventListener("click",()=>delProduct(p.id));
+        dm.appendChild(eb);dm.appendChild(dd);dm.appendChild(dlb);dw.appendChild(dm);
+      }
+      tr.appendChild(dw);ctop.appendChild(tr);card.appendChild(ctop);
+      // unit / godown
+      const meta=[];
+      if(p.unit)meta.push(p.unit);
+      if(p.godown)meta.push("📦 "+p.godown);
+      if(p.note)meta.push(p.note);
+      if(meta.length)card.appendChild(el("div","card-meta",meta.join("  ·  ")));
+      // price boxes
+      const pb=el("div","price-boxes");
+      [{label:"BUY",val:p.buyPrice,cls:"pbox-buy"},{label:"SELL",val:p.sellPrice,cls:"pbox-sell"},{label:"PACKET",val:p.packetPrice,cls:"pbox-pkt"}].forEach(b=>{
+        const box=el("div","pbox "+b.cls);
+        box.appendChild(el("div","pbox-label",b.label));
+        box.appendChild(el("div","pbox-val",inr(b.val)));
+        pb.appendChild(box);
+      });
+      card.appendChild(pb);
+      // actions
+      const acts=el("div","card-actions");
+      const eb=el("button","card-btn","✏️ Edit");eb.addEventListener("click",()=>openEdit(p));
+      const div=el("div","card-divider");
+      const ab=el("button","card-btn card-btn-green","🛒 Add to Purchase");ab.addEventListener("click",()=>addToPurchase(p));
+      acts.appendChild(eb);acts.appendChild(div);acts.appendChild(ab);card.appendChild(acts);
+      cards.appendChild(card);
+    });
+    app.appendChild(cards);
+  }
+
+  // ── PURCHASE LIST ──────────────────────────────────────────────────────
+  else if(tab==="purchase"){
+    app.appendChild(on(el("button","add-p-btn","+ Add to Purchase List"),"click",()=>{ppf=blankPP();editPId=null;sheet="purchase";render();}));
+    const pend=purchases.filter(p=>!p.done);
+    const dn=purchases.filter(p=>p.done);
+    if(!pend.length&&!dn.length){app.appendChild(el("div","empty","Purchase list empty.\nTap 🛒 on any product to add."));}
+    if(pend.length){
+      const sh=el("div","sec-hdr");sh.appendChild(el("span","sec-title",`To Buy (${pend.length})`));app.appendChild(sh);
+      pend.forEach(x=>{
+        const c=el("div","p-card");const row=el("div","p-row");
+        const cb=el("input","p-check");cb.type="checkbox";cb.addEventListener("change",()=>toggleP(x.id));
+        const info=el("div","");info.style.flex="1";
+        info.appendChild(el("div","p-name",x.name+(+x.qty>1?" ×"+x.qty:"")));
+        if(x.buyPrice||x.note)info.appendChild(el("div","p-sub",[x.buyPrice?"Buy ₹"+x.buyPrice:"",x.note].filter(Boolean).join(" · ")));
+        const acts=el("div","p-acts");
+        acts.appendChild(on(el("button","p-edit-btn","Edit"),"click",()=>{ppf={...x};editPId=x.id;sheet="purchase";render();}));
+        acts.appendChild(on(el("button","p-del-btn","✕"),"click",()=>delP(x.id)));
+        row.appendChild(cb);row.appendChild(info);row.appendChild(acts);c.appendChild(row);app.appendChild(c);
+      });
+    }
+    if(dn.length){
+      const sh=el("div","sec-hdr");
+      sh.appendChild(el("span","sec-title",`Done (${dn.length})`));
+      sh.appendChild(on(el("button","clear-btn","Clear"),"click",clearDone));
+      app.appendChild(sh);
+      dn.forEach(x=>{
+        const c=el("div","p-card p-done");const row=el("div","p-row");
+        const cb=el("input","p-check");cb.type="checkbox";cb.checked=true;cb.addEventListener("change",()=>toggleP(x.id));
+        const nm=el("div","p-name",x.name+(+x.qty>1?" ×"+x.qty:""));
+        const db=on(el("button","p-del-btn","✕"),"click",()=>delP(x.id));
+        row.appendChild(cb);row.appendChild(nm);row.appendChild(db);c.appendChild(row);app.appendChild(c);
+      });
+    }
+  }
+
+  // ── IMPORT / EXPORT ───────────────────────────────────────────────────
+  else if(tab==="importexport"){
+    const w=el("div","ie-wrap");
+    const ec=el("div","ie-card");
+    ec.appendChild(el("div","ie-title","📤 Export to Excel"));
+    ec.appendChild(el("div","ie-sub","Download all products and purchase list as .xlsx file."));
+    ec.appendChild(on(el("button","ie-btn ie-green","↑ Export Excel"),"click",exportXL));
+    w.appendChild(ec);
+    const ic=el("div","ie-card");
+    ic.appendChild(el("div","ie-title","📥 Import from Excel"));
+    ic.appendChild(el("div","ie-sub","Columns: Product Name, Unit, Category, Buy Price (₹), Sell Price (₹), Packet Price (₹), Godown, Note"));
+    const fi2=el("input","");fi2.type="file";fi2.accept=".xlsx,.xls";fi2.style.display="none";fi2.addEventListener("change",importXL);
+    ic.appendChild(fi2);
+    ic.appendChild(on(el("button","ie-btn ie-gray","↓ Import Excel"),"click",()=>fi2.click()));
+    w.appendChild(ic);
+    const cc=el("div","ie-card");
+    cc.appendChild(el("div","ie-title","🏷️ Manage Categories"));
+    cc.appendChild(el("div","ie-sub","Add or remove product categories."));
+    cc.appendChild(on(el("button","ie-btn ie-gray","Manage Categories"),"click",()=>{sheet="categories";render();}));
+    w.appendChild(cc);
+    app.appendChild(w);
+  }
+
+  // ── SHEET ─────────────────────────────────────────────────────────────
+  if(sheet){
+    const ov=el("div","overlay");
+    ov.addEventListener("click",e=>{if(e.target===ov){sheet=null;editId=null;editPId=null;render();}});
+    const s=el("div","sheet");
+    s.appendChild(el("div","sheet-handle"));
+
+    if(sheet==="product"){
+      s.appendChild(el("div","sheet-title",editId!=null?"Edit Product":"New Product"));
+      s.appendChild(field("Product Name *",inp(pf.name,"e.g. 100ml Itc",e=>{pf.name=e.target.value;})));
+      const r1=el("div","frow2");
+      r1.appendChild(field("Unit",inp(pf.unit,"per packet",e=>{pf.unit=e.target.value;})));
+      r1.appendChild(field("Category",selEl([{v:"",l:"-- Select --"},...categories.map(c=>({v:c,l:c}))],pf.category,e=>{pf.category=e.target.value;})));
+      s.appendChild(r1);
+      // BUY first, then SELL, then PACKET
+      s.appendChild(el("span","flabel","Prices (₹)"));
+      const r2=el("div","frow3");r2.style.marginBottom="12px";
+      [{label:"Buy Price",key:"buyPrice",ph:"22"},{label:"Sell Price",key:"sellPrice",ph:"25"},{label:"Packet",key:"packetPrice",ph:"25"}].forEach(f=>{
+        const fd=el("div","field");fd.style.marginBottom="0";
+        fd.appendChild(el("span","flabel",f.label));
+        const i=inp(pf[f.key],f.ph,e=>{pf[f.key]=e.target.value;},"number");
+        fd.appendChild(i);r2.appendChild(fd);
+      });
+      s.appendChild(r2);
+      s.appendChild(field("Godown (optional)",inp(pf.godown,"e.g. Main Godown",e=>{pf.godown=e.target.value;})));
+      s.appendChild(field("Note",inp(pf.note,"Optional",e=>{pf.note=e.target.value;})));
+      s.appendChild(on(el("button","save-btn",editId!=null?"Save Changes":"Add Product"),"click",saveProduct));
+      s.appendChild(on(el("button","cancel-btn","Cancel"),"click",()=>{sheet=null;editId=null;pf=blankP();render();}));
+    }
+
+    else if(sheet==="purchase"){
+      s.appendChild(el("div","sheet-title",editPId!=null?"Edit Item":"Add to Purchase List"));
+      s.appendChild(field("Product Name *",inp(ppf.name,"Product name",e=>{ppf.name=e.target.value;})));
+      const r1=el("div","frow2");
+      r1.appendChild(field("Qty",inp(ppf.qty,"1",e=>{ppf.qty=e.target.value;},"number")));
+      r1.appendChild(field("Buy Price (₹)",inp(ppf.buyPrice,"Expected",e=>{ppf.buyPrice=e.target.value;},"number")));
+      s.appendChild(r1);
+      s.appendChild(field("Note",inp(ppf.note,"Optional",e=>{ppf.note=e.target.value;})));
+      s.appendChild(on(el("button","save-btn",editPId!=null?"Save Changes":"Add to List"),"click",savePurchase));
+      s.appendChild(on(el("button","cancel-btn","Cancel"),"click",()=>{sheet=null;editPId=null;ppf=blankPP();render();}));
+    }
+
+    else if(sheet==="categories"){
+      s.appendChild(el("div","sheet-title","Manage Categories"));
+      categories.forEach(c=>{
+        const row=el("div","cat-item");
+        row.appendChild(el("span","",c));
+        row.appendChild(on(el("button","cat-del","✕"),"click",()=>delCat(c)));
+        s.appendChild(row);
+      });
+      const ar=el("div","cat-add-row");
+      const ci=el("input","");ci.placeholder="New category name...";ci.value=newCat;ci.className="";
+      ci.style.cssText="flex:1;border:1.5px solid #e8e8e8;border-radius:10px;padding:10px 12px;font-size:14px";
+      ci.addEventListener("input",e=>{newCat=e.target.value;});
+      ar.appendChild(ci);ar.appendChild(on(el("button","cat-add-btn","Add"),"click",addCat));
+      s.appendChild(ar);
+      s.appendChild(on(el("button","cancel-btn","Close"),"click",()=>{sheet=null;render();}));
+    }
+
+    ov.appendChild(s);app.appendChild(ov);
+  }
+
+  // close dot menu on outside tap
+  if(openMenu!==null){
+    setTimeout(()=>{
+      document.addEventListener("click",function h(){openMenu=null;render();document.removeEventListener("click",h);},{once:true});
+    },0);
+  }
+}
+
+render();
+if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script>
+  
+<script type="module" src="./js/products.js"></script>
+ <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyC2AarE6wb92i14kE2Lly3I5PeYOKq_em8",
+    authDomain: "baby-store-a1b39.firebaseapp.com",
+    databaseURL: "https://baby-store-a1b39-default-rtdb.firebaseio.com",
+    projectId: "baby-store-a1b39",
+    storageBucket: "baby-store-a1b39.firebasestorage.app",
+    messagingSenderId: "452754922308",
+    appId: "1:452754922308:web:6dc7ff7f8294e7b21cd511",
+    measurementId: "G-5LY601QKJ3"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+    </script> 
+</body>
+</html>
