@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<title>Catalogue · Cloud Sync Fixed</title>
+<title>Catalogue · Cloud Sync (Fixed)</title>
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -21,9 +20,10 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f5f5f
 .hdr-add{background:#111;color:white;border:none}
 .dot-header{position:relative}
 .dot-header-btn{background:#f0f0f0;border:none;border-radius:8px;width:34px;height:34px;font-size:20px;cursor:pointer}
-.header-dropdown{position:absolute;top:40px;right:0;background:#fff;border-radius:14px;box-shadow:0 6px 20px #0002;min-width:160px;z-index:200;overflow:hidden}
+.header-dropdown{position:absolute;top:40px;right:0;background:#fff;border-radius:14px;box-shadow:0 6px 20px #0002;min-width:180px;z-index:200;overflow:hidden}
 .header-dropdown button{width:100%;padding:12px 16px;border:none;background:transparent;text-align:left;font-size:14px;cursor:pointer}
 .header-dropdown button:active{background:#f5f5f5}
+.firebase-error{background:#fee;color:#c00;font-size:11px;padding:4px 8px;border-radius:20px;margin-left:8px}
 .toptabs{display:flex;background:#efefef;border-radius:12px;margin:12px 14px 0;padding:3px}
 .toptab{flex:1;padding:8px 0;border:none;border-radius:8px;background:transparent;font-weight:700;cursor:pointer}
 .toptab.active{background:#fff;box-shadow:0 1px 3px #0001}
@@ -113,7 +113,7 @@ let searchVal = "";
 let bulkMode = false;
 let selectedProducts = new Set();
 let firestoreEnabled = false, db = null, docRef = null, unsub = null, updating = false;
-let headerDropdown = false;
+let firebaseErrorMsg = "";
 
 // helpers
 function blankP(){ return {name:"",unit:"per packet",category:"",buyPrice:"",sellPrice:"",packetPrice:"",godown:"",note:""}; }
@@ -146,11 +146,11 @@ function loadFromLocal(){
   catalogueName = localStorage.getItem("cat_name")||"Catalogue";
 }
 
-// ---------- Firebase init with offline persistence ----------
-async function initFirebase(){
+// ---------- Firebase init with detailed error reporting ----------
+async function initFirebase(retry = false){
   if(!firebaseConfig.apiKey) { loadFromLocal(); firestoreEnabled=false; render(); return; }
   try{
-    firebase.initializeApp(firebaseConfig);
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     await db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
     await firebase.auth().signInAnonymously();
@@ -165,7 +165,9 @@ async function initFirebase(){
       persistToLocal();
     } else { loadFromLocal(); await docRef.set({products,categories,purchases,catalogueName,npid,nppid}); }
     firestoreEnabled=true;
+    firebaseErrorMsg="";
     render();
+    if(unsub) unsub();
     unsub = docRef.onSnapshot(s=>{
       if(!s.exists || updating) return;
       const d=s.data();
@@ -177,7 +179,15 @@ async function initFirebase(){
       render();
       toast("🔄 Synced from cloud");
     });
-  }catch(e){ loadFromLocal(); firestoreEnabled=false; render(); toast("Firebase failed, local only",true); }
+    toast("Firebase connected! Cloud sync active");
+  }catch(e){
+    console.error("Firebase init error", e);
+    firebaseErrorMsg = e.message || "Unknown error";
+    loadFromLocal();
+    firestoreEnabled=false;
+    render();
+    toast(`Firebase failed: ${firebaseErrorMsg.substring(0,80)}. Using local only.`, true);
+  }
 }
 
 // ---------- CRUD Operations (all call persist) ----------
@@ -370,11 +380,18 @@ function render(){
   const dotHeader=el("div","dot-header");
   const dotBtn=el("button","dot-header-btn","⋮");
   let dropdownDiv=null;
-  dotBtn.addEventListener("click",(e)=>{ e.stopPropagation(); if(dropdownDiv){ dropdownDiv.remove(); dropdownDiv=null; } else{ dropdownDiv=el("div","header-dropdown"); dropdownDiv.innerHTML=`<button id="menuBulk">🗑 Bulk Delete</button><button id="menuExport">📎 Export Excel</button><button id="menuImport">📥 Import Excel</button><button id="menuCats">🏷️ Manage Categories</button>`; dropdownDiv.querySelector("#menuBulk").addEventListener("click",()=>{ if(tab!=="catalogue"){ toast("Switch to Catalogue tab first",true); return; } enterBulkMode(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuExport").addEventListener("click",()=>{ exportXL(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuImport").addEventListener("click",()=>{ triggerImport(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuCats").addEventListener("click",()=>{ sheet="categoryManager"; dropdownDiv?.remove(); dropdownDiv=null; render(); }); dotHeader.appendChild(dropdownDiv); } });
+  dotBtn.addEventListener("click",(e)=>{ e.stopPropagation(); if(dropdownDiv){ dropdownDiv.remove(); dropdownDiv=null; } else{ dropdownDiv=el("div","header-dropdown"); dropdownDiv.innerHTML=`<button id="menuBulk">🗑 Bulk Delete</button><button id="menuExport">📎 Export Excel</button><button id="menuImport">📥 Import Excel</button><button id="menuCats">🏷️ Manage Categories</button>${!firestoreEnabled ? `<button id="menuRetryFirebase" style="color:#0d9e8a">🔄 Retry Firebase</button>` : ''}<button id="menuHelp" style="color:#888">❓ Enable Cloud Sync</button>`; dropdownDiv.querySelector("#menuBulk")?.addEventListener("click",()=>{ if(tab!=="catalogue"){ toast("Switch to Catalogue tab first",true); return; } enterBulkMode(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuExport")?.addEventListener("click",()=>{ exportXL(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuImport")?.addEventListener("click",()=>{ triggerImport(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuCats")?.addEventListener("click",()=>{ sheet="categoryManager"; dropdownDiv?.remove(); dropdownDiv=null; render(); }); dropdownDiv.querySelector("#menuRetryFirebase")?.addEventListener("click",async()=>{ toast("Retrying Firebase..."); await initFirebase(true); dropdownDiv?.remove(); dropdownDiv=null; render(); }); dropdownDiv.querySelector("#menuHelp")?.addEventListener("click",()=>{ alert("To enable cloud sync:\n1. Go to Firebase Console → Authentication → Sign-in methods → Enable Anonymous Auth\n2. Go to Firestore Database → Create database (start in test mode)\n3. Then click 'Retry Firebase' in this menu"); dropdownDiv?.remove(); dropdownDiv=null; }); dotHeader.appendChild(dropdownDiv); } });
   document.addEventListener("click",(e)=>{ if(!dotHeader.contains(e.target) && dropdownDiv){ dropdownDiv.remove(); dropdownDiv=null; } });
   dotHeader.appendChild(dotBtn);
   right.appendChild(dotHeader);
-  if(firestoreEnabled) right.appendChild(el("span","sync-badge","☁️"));
+  // Firebase status indicator
+  if(firestoreEnabled){
+    right.appendChild(el("span","sync-badge","☁️ Synced"));
+  } else {
+    let errSpan=el("span","firebase-error","⚠️ Offline mode");
+    errSpan.title=firebaseErrorMsg;
+    right.appendChild(errSpan);
+  }
   hdr.appendChild(right); app.appendChild(hdr);
   // hidden file input
   let fileInput=el("input",""); fileInput.type="file"; fileInput.accept=".xlsx,.xls"; fileInput.style.display="none"; fileInput.id="importFileInput"; fileInput.addEventListener("change",importXL);
@@ -444,6 +461,7 @@ function render(){
     let ov=el("div","overlay"); ov.appendChild(s); app.appendChild(ov);
   }
 }
+// Start the app
 initFirebase();
 </script>
 </body>
