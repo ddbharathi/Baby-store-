@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<title>Catalogue · Cloud Sync (Fixed)</title>
+<title>Catalogue · Save Fixed</title>
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -20,7 +20,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f5f5f
 .hdr-add{background:#111;color:white;border:none}
 .dot-header{position:relative}
 .dot-header-btn{background:#f0f0f0;border:none;border-radius:8px;width:34px;height:34px;font-size:20px;cursor:pointer}
-.header-dropdown{position:absolute;top:40px;right:0;background:#fff;border-radius:14px;box-shadow:0 6px 20px #0002;min-width:180px;z-index:200;overflow:hidden}
+.header-dropdown{position:absolute;top:40px;right:0;background:#fff;border-radius:14px;box-shadow:0 6px 20px #0002;min-width:200px;z-index:200;overflow:hidden}
 .header-dropdown button{width:100%;padding:12px 16px;border:none;background:transparent;text-align:left;font-size:14px;cursor:pointer}
 .header-dropdown button:active{background:#f5f5f5}
 .firebase-error{background:#fee;color:#c00;font-size:11px;padding:4px 8px;border-radius:20px;margin-left:8px}
@@ -88,7 +88,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f5f5f
 <div id="app"></div>
 <div id="toast" class="toast"></div>
 <script>
-// Firebase configuration (your project)
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyC2AarE6wb92i14kE2Lly3I5PeYOKq_em8",
   authDomain: "baby-store-a1b39.firebaseapp.com",
@@ -107,22 +107,24 @@ let npid = 1, nppid = 1;
 let tab = "catalogue";
 let filterCat = "All";
 let openMenu = null, sheet = null, editId = null, editPId = null, newCat = "";
-let pf = {name:"",unit:"per packet",category:"",buyPrice:"",sellPrice:"",packetPrice:"",godown:"",note:""};
-let ppf = {name:"",qty:"1",buyPrice:"",note:""};
 let searchVal = "";
 let bulkMode = false;
 let selectedProducts = new Set();
 let firestoreEnabled = false, db = null, docRef = null, unsub = null, updating = false;
 let firebaseErrorMsg = "";
 
-// helpers
-function blankP(){ return {name:"",unit:"per packet",category:"",buyPrice:"",sellPrice:"",packetPrice:"",godown:"",note:""}; }
-function blankPP(){ return {name:"",qty:"1",buyPrice:"",note:""}; }
-function toast(msg,err){ const e=document.getElementById("toast"); e.className="toast"; e.style.background=err?"#e33":"#111"; e.textContent=msg; e.style.display="block"; setTimeout(()=>e.style.display="none",2500); }
+// Default data
+const DEFAULT_PRODUCTS = [
+  {id:1, name:"100ml Itc", unit:"per packet", category:"Paper Cup", buyPrice:22, sellPrice:25, packetPrice:25, godown:"", note:""},
+  {id:2, name:"10x12", unit:"per bag", category:"Plastic Bag", buyPrice:15, sellPrice:20, packetPrice:20, godown:"", note:""}
+];
+const DEFAULT_CATEGORIES = ["Paper Cup","Plastic Bag","Thermocol Plate","Aluminum Foil"];
+
+function toast(msg,err){ const e=document.getElementById("toast"); e.className="toast"; e.style.background=err?"#e33":"#111"; e.textContent=msg; e.style.display="block"; setTimeout(()=>e.style.display="none",3000); }
 function inr(v){ return (v===""||v==null)?"—":"₹"+Number(v).toFixed(2); }
 function pendingCount(){ return purchases.filter(p=>!p.done).length; }
 
-// ---------- Persistence (Local + Firestore) ----------
+// Persistence
 function persistToLocal(){
   localStorage.setItem("cat_products",JSON.stringify(products));
   localStorage.setItem("cat_cats",JSON.stringify(categories));
@@ -137,16 +139,44 @@ async function syncToFirestore(){
   catch(e){ console.warn(e); }
 }
 function persist(){ persistToLocal(); syncToFirestore(); }
+
 function loadFromLocal(){
-  products = JSON.parse(localStorage.getItem("cat_products") || JSON.stringify([{id:1,name:"100ml Itc",unit:"per packet",category:"Paper Cup",buyPrice:22,sellPrice:25,packetPrice:25,godown:"",note:""},{id:2,name:"10x12",unit:"per bag",category:"Plastic Bag",buyPrice:15,sellPrice:20,packetPrice:20,godown:"",note:""}]));
-  categories = JSON.parse(localStorage.getItem("cat_cats") || JSON.stringify(["Paper Cup","Plastic Bag","Thermocol Plate","Aluminum Foil"]));
+  let storedProducts = localStorage.getItem("cat_products");
+  if(storedProducts && storedProducts !== "[]" && storedProducts !== "null"){
+    products = JSON.parse(storedProducts);
+  } else {
+    products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+    npid = 3;
+  }
+  let storedCats = localStorage.getItem("cat_cats");
+  if(storedCats && storedCats !== "[]" && storedCats !== "null"){
+    categories = JSON.parse(storedCats);
+  } else {
+    categories = [...DEFAULT_CATEGORIES];
+  }
   purchases = JSON.parse(localStorage.getItem("cat_purchases") || "[]");
-  npid = Number(localStorage.getItem("cat_npid")||3);
-  nppid = Number(localStorage.getItem("cat_nppid")||1);
-  catalogueName = localStorage.getItem("cat_name")||"Catalogue";
+  npid = Number(localStorage.getItem("cat_npid") || (products.length > 0 ? Math.max(...products.map(p=>p.id),0)+1 : 3));
+  nppid = Number(localStorage.getItem("cat_nppid") || 1);
+  catalogueName = localStorage.getItem("cat_name") || "Catalogue";
+  let maxId = products.length ? Math.max(...products.map(p=>p.id)) : 2;
+  if(npid <= maxId) npid = maxId + 1;
 }
 
-// ---------- Firebase init with detailed error reporting ----------
+function resetSampleProducts(){
+  if(confirm("Reset to 2 sample products? This will replace all current products.")){
+    products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+    categories = [...DEFAULT_CATEGORIES];
+    purchases = [];
+    npid = 3;
+    nppid = 1;
+    catalogueName = "Catalogue";
+    persist();
+    render();
+    toast("Reset to sample products");
+  }
+}
+
+// Firebase init
 async function initFirebase(retry = false){
   if(!firebaseConfig.apiKey) { loadFromLocal(); firestoreEnabled=false; render(); return; }
   try{
@@ -163,7 +193,10 @@ async function initFirebase(retry = false){
       catalogueName=d.catalogueName||"Catalogue"; npid=d.npid||1; nppid=d.nppid||1;
       updating=false;
       persistToLocal();
-    } else { loadFromLocal(); await docRef.set({products,categories,purchases,catalogueName,npid,nppid}); }
+    } else { 
+      loadFromLocal(); 
+      await docRef.set({products,categories,purchases,catalogueName,npid,nppid}); 
+    }
     firestoreEnabled=true;
     firebaseErrorMsg="";
     render();
@@ -181,40 +214,92 @@ async function initFirebase(retry = false){
     });
     toast("Firebase connected! Cloud sync active");
   }catch(e){
-    console.error("Firebase init error", e);
+    console.error(e);
     firebaseErrorMsg = e.message || "Unknown error";
+    if(firebaseErrorMsg.includes("auth/configuration-not-found")){
+      firebaseErrorMsg = "Enable Anonymous Auth in Firebase Console → Authentication → Sign-in methods";
+    }
     loadFromLocal();
     firestoreEnabled=false;
     render();
-    toast(`Firebase failed: ${firebaseErrorMsg.substring(0,80)}. Using local only.`, true);
+    toast(`Firebase: ${firebaseErrorMsg.substring(0,100)}. Offline mode.`, true);
   }
 }
 
-// ---------- CRUD Operations (all call persist) ----------
-function saveProduct(){
-  if(!pf.name.trim()){ toast("Product name required",true); return; }
-  const e={...pf,buyPrice:pf.buyPrice!==""?+pf.buyPrice:"",sellPrice:pf.sellPrice!==""?+pf.sellPrice:"",packetPrice:pf.packetPrice!==""?+pf.packetPrice:""};
-  if(editId!=null){ products=products.map(p=>p.id===editId?{...e,id:editId}:p); toast("Updated"); }
-  else{ products=[...products,{...e,id:npid}]; npid++; toast("Product added"); }
-  pf=blankP(); editId=null; sheet=null; persist(); render();
+// ---------- CRUD Operations ----------
+function saveProductFromForm(){
+  // Get values from the currently open sheet inputs
+  const nameInput = document.getElementById("prod_name");
+  const unitInput = document.getElementById("prod_unit");
+  const catInput = document.getElementById("prod_category");
+  const buyInput = document.getElementById("prod_buy");
+  const sellInput = document.getElementById("prod_sell");
+  const packetInput = document.getElementById("prod_packet");
+  
+  if(!nameInput || !nameInput.value.trim()){ toast("Product name required",true); return; }
+  const name = nameInput.value.trim();
+  const unit = unitInput.value.trim() || "per packet";
+  const category = catInput ? catInput.value : "";
+  const buyPrice = buyInput.value !== "" ? +buyInput.value : "";
+  const sellPrice = sellInput.value !== "" ? +sellInput.value : "";
+  const packetPrice = packetInput.value !== "" ? +packetInput.value : "";
+  
+  if(editId != null){
+    products = products.map(p => p.id === editId ? {...p, name, unit, category, buyPrice, sellPrice, packetPrice} : p);
+    toast("Product updated");
+  } else {
+    products = [...products, {id: npid, name, unit, category, buyPrice, sellPrice, packetPrice, godown:"", note:""}];
+    npid++;
+    toast("Product added");
+  }
+  sheet = null;
+  editId = null;
+  persist();
+  render();
 }
+
+function savePurchaseFromForm(){
+  const nameInput = document.getElementById("purchase_name");
+  const qtyInput = document.getElementById("purchase_qty");
+  const priceInput = document.getElementById("purchase_price");
+  const noteInput = document.getElementById("purchase_note");
+  
+  if(!nameInput || !nameInput.value.trim()){ toast("Product name required",true); return; }
+  const name = nameInput.value.trim();
+  const qty = qtyInput.value || "1";
+  const buyPrice = priceInput.value || "";
+  const note = noteInput ? noteInput.value : "";
+  
+  if(editPId != null){
+    purchases = purchases.map(p => p.id === editPId ? {...p, name, qty, buyPrice, note} : p);
+    toast("Purchase updated");
+  } else {
+    purchases = [...purchases, {id: nppid, productId: null, name, qty, buyPrice, note, done: false}];
+    nppid++;
+    toast("Added to purchase list");
+  }
+  sheet = null;
+  editPId = null;
+  persist();
+  render();
+}
+
 function delProduct(id){
   products=products.filter(p=>p.id!==id);
   purchases=purchases.filter(p=>p.productId!==id);
   selectedProducts.delete(id);
   openMenu=null; persist(); render(); toast("Deleted");
 }
-function openEdit(p){ pf={...p,buyPrice:typeof p.buyPrice==='string'?p.buyPrice:String(p.buyPrice),sellPrice:typeof p.sellPrice==='string'?p.sellPrice:String(p.sellPrice),packetPrice:typeof p.packetPrice==='string'?p.packetPrice:String(p.packetPrice)}; editId=p.id; sheet="product"; openMenu=null; render(); }
+function openEdit(p){
+  editId=p.id;
+  sheet="product";
+  // We'll set the form values in renderProductSheet
+  render();
+}
 function addToPurchase(p){
   if(purchases.find(x=>x.productId===p.id && !x.done)){ toast("Already in list",true); return; }
   purchases=[...purchases,{id:nppid,productId:p.id,name:p.name,qty:"1",buyPrice:String(p.buyPrice||""),note:"",done:false}];
   nppid++; persist(); toast("Added to purchase"); render();
-}
-function savePurchase(){
-  if(!ppf.name.trim()){ toast("Name required",true); return; }
-  if(editPId!=null){ purchases=purchases.map(p=>p.id===editPId?{...ppf,id:editPId,done:p.done}:p); toast("Updated"); }
-  else{ purchases=[...purchases,{...ppf,id:nppid,done:false}]; nppid++; toast("Added"); }
-  ppf=blankPP(); editPId=null; sheet=null; persist(); render();
 }
 function toggleP(id){ purchases=purchases.map(p=>p.id===id?{...p,done:!p.done}:p); persist(); render(); }
 function delP(id){ purchases=purchases.filter(p=>p.id!==id); persist(); render(); toast("Removed"); }
@@ -288,12 +373,10 @@ function importXL(e){
   e.target.value="";
 }
 
-// ---------- DOM rendering ----------
+// ---------- DOM helpers ----------
 function el(t,c,txt){ let e=document.createElement(t); if(c)e.className=c; if(txt)e.textContent=txt; return e; }
 function on(e,ev,fn){ e.addEventListener(ev,fn); return e; }
-function inp(val,ph,onChange,type){ let i=el("input","finput"); i.type=type||"text"; i.placeholder=ph||""; i.value=val||""; i.addEventListener("input",onChange); return i; }
 function sel(opts,val,onChange){ let s=el("select","finput"); opts.forEach(o=>{let opt=document.createElement("option"); opt.value=o.v||o; opt.textContent=o.l||o; if((o.v||o)===val)opt.selected=true; s.appendChild(opt);}); s.addEventListener("change",onChange); return s; }
-function field(lbl,child){ let w=el("div","field"); w.appendChild(el("span","flabel",lbl)); w.appendChild(child); return w; }
 function categoryPicker(val,onChange){
   let wrap=el("div","cat-picker");
   let input=el("input","cat-picker-input"); input.placeholder="Select or type"; input.value=val;
@@ -307,11 +390,12 @@ function categoryPicker(val,onChange){
   wrap.appendChild(input); wrap.appendChild(arrow);
   return wrap;
 }
+
 function renderCards(){
   let wrap=document.getElementById("cards-wrap");
   if(!wrap) return;
   let filtered=products.filter(p=>(filterCat==="All"||p.category===filterCat) && p.name.toLowerCase().includes(searchVal.toLowerCase()));
-  if(filtered.length===0){ wrap.innerHTML="<div class='empty'>✨ No products</div>"; return; }
+  if(filtered.length===0){ wrap.innerHTML="<div class='empty'>✨ No products. Tap + Add or ⋮ → Reset Sample Products</div>"; return; }
   let cardsDiv=el("div","cards");
   filtered.forEach(p=>{
     let card=el("div","card");
@@ -365,6 +449,102 @@ function renderBulkBar(){
   document.getElementById("bulkDeleteBtn")?.addEventListener("click",bulkDeleteSelected);
   document.getElementById("bulkCancelBtn")?.addEventListener("click",cancelBulkMode);
 }
+
+// Sheet rendering with direct ID-based value retrieval
+function renderProductSheet(){
+  let s=el("div","sheet");
+  s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">${editId?"Edit Product":"New Product"}</div>
+    <div class="field"><span class="flabel">Product name</span><input type="text" id="prod_name" class="finput" placeholder="Product name" value="${editId ? (products.find(p=>p.id===editId)?.name||'') : ''}"></div>
+    <div class="field"><span class="flabel">Unit</span><input type="text" id="prod_unit" class="finput" placeholder="e.g., per packet" value="${editId ? (products.find(p=>p.id===editId)?.unit||'per packet') : 'per packet'}"></div>
+    <div class="field"><span class="flabel">Category</span><div id="cat-picker-container"></div></div>
+    <div class="field"><span class="flabel">Buy Price (₹)</span><input type="number" id="prod_buy" class="finput" placeholder="0" value="${editId ? (products.find(p=>p.id===editId)?.buyPrice||'') : ''}"></div>
+    <div class="field"><span class="flabel">Sell Price (₹)</span><input type="number" id="prod_sell" class="finput" placeholder="0" value="${editId ? (products.find(p=>p.id===editId)?.sellPrice||'') : ''}"></div>
+    <div class="field"><span class="flabel">Packet Price (₹)</span><input type="number" id="prod_packet" class="finput" placeholder="0" value="${editId ? (products.find(p=>p.id===editId)?.packetPrice||'') : ''}"></div>
+    <button class="save-btn" id="productSaveBtn">✓ Save</button>
+    <button class="cancel-btn" id="productCancelBtn">Cancel</button>`;
+  // attach category picker
+  setTimeout(()=>{
+    const container = s.querySelector("#cat-picker-container");
+    if(container){
+      const currentCat = editId ? (products.find(p=>p.id===editId)?.category||'') : '';
+      const picker = categoryPicker(currentCat, (val)=>{
+        const catInput = s.querySelector("#prod_category");
+        if(!catInput){
+          const hidden = document.createElement("input");
+          hidden.type="hidden";
+          hidden.id="prod_category";
+          hidden.value=val;
+          s.appendChild(hidden);
+        } else { catInput.value=val; }
+      });
+      container.appendChild(picker);
+      // ensure hidden input exists
+      if(!s.querySelector("#prod_category")){
+        const hidden = document.createElement("input");
+        hidden.type="hidden";
+        hidden.id="prod_category";
+        hidden.value=currentCat;
+        s.appendChild(hidden);
+      }
+    }
+  },0);
+  let ov=el("div","overlay");
+  ov.appendChild(s);
+  document.getElementById("app").appendChild(ov);
+  document.getElementById("productSaveBtn")?.addEventListener("click",saveProductFromForm);
+  document.getElementById("productCancelBtn")?.addEventListener("click",()=>{ sheet=null; render(); });
+}
+
+function renderPurchaseSheet(){
+  let s=el("div","sheet");
+  const editing = editPId != null;
+  const existing = editing ? purchases.find(p=>p.id===editPId) : null;
+  s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">${editing?"Edit Item":"Add to Purchase"}</div>
+    <div class="field"><span class="flabel">Product name</span><input type="text" id="purchase_name" class="finput" placeholder="Product name" value="${existing ? existing.name : ''}"></div>
+    <div class="field"><span class="flabel">Quantity</span><input type="number" id="purchase_qty" class="finput" placeholder="1" value="${existing ? existing.qty : '1'}"></div>
+    <div class="field"><span class="flabel">Buy Price (₹)</span><input type="number" id="purchase_price" class="finput" placeholder="0" value="${existing ? existing.buyPrice : ''}"></div>
+    <div class="field"><span class="flabel">Note</span><input type="text" id="purchase_note" class="finput" placeholder="Optional" value="${existing ? existing.note : ''}"></div>
+    <button class="save-btn" id="purchaseSaveBtn">✓ Save</button>
+    <button class="cancel-btn" id="purchaseCancelBtn">Cancel</button>`;
+  let ov=el("div","overlay");
+  ov.appendChild(s);
+  document.getElementById("app").appendChild(ov);
+  document.getElementById("purchaseSaveBtn")?.addEventListener("click",savePurchaseFromForm);
+  document.getElementById("purchaseCancelBtn")?.addEventListener("click",()=>{ sheet=null; render(); });
+}
+
+function renderRenameSheet(){
+  let s=el("div","sheet");
+  s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">Rename Catalogue</div>
+    <input type="text" id="renameInput" class="finput" value="${catalogueName}">
+    <button class="save-btn" id="renameSaveBtn">Save</button>
+    <button class="cancel-btn" id="renameCancelBtn">Cancel</button>`;
+  let ov=el("div","overlay");
+  ov.appendChild(s);
+  document.getElementById("app").appendChild(ov);
+  document.getElementById("renameSaveBtn")?.addEventListener("click",()=>{
+    let newName = document.getElementById("renameInput").value;
+    if(newName.trim()) saveCatalogueName(newName);
+    else toast("Name cannot be empty",true);
+  });
+  document.getElementById("renameCancelBtn")?.addEventListener("click",()=>{ sheet=null; render(); });
+}
+
+function renderCategorySheet(){
+  let s=el("div","sheet");
+  s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">Manage Categories</div><div id="catList"></div><div class="cat-add-row" style="display:flex;gap:8px;margin-top:12px"><input id="newCatInput" placeholder="New category" style="flex:1;padding:10px;border-radius:10px;border:1px solid #ddd"/><button id="addCatBtn" style="padding:10px 16px;background:#111;color:#fff;border:none;border-radius:10px">+ Add</button></div><button class="cancel-btn" style="margin-top:16px">Close</button>`;
+  setTimeout(()=>{
+    const listDiv=s.querySelector("#catList");
+    categories.forEach(c=>{ let row=el("div","cat-item"); row.style.display="flex"; row.style.justifyContent="space-between"; row.style.padding="8px 0"; row.innerHTML=`<span>${c}</span><button class="cat-del" data-cat="${c}" style="background:none;border:none;color:#e33;font-size:18px">🗑</button>`; row.querySelector(".cat-del")?.addEventListener("click",()=>delCat(c)); listDiv.appendChild(row); });
+    const addBtn=s.querySelector("#addCatBtn"); const inpCat=s.querySelector("#newCatInput"); addBtn?.addEventListener("click",()=>{ newCat=inpCat.value; addCat(); inpCat.value=""; renderCategorySheet(); });
+    s.querySelector(".cancel-btn")?.addEventListener("click",()=>{sheet=null;render();});
+  },0);
+  let ov=el("div","overlay");
+  ov.appendChild(s);
+  document.getElementById("app").appendChild(ov);
+}
+
+// ---------- Main render ----------
 function render(){
   const app=document.getElementById("app"); app.innerHTML="";
   // header
@@ -374,17 +554,16 @@ function render(){
   hdr.appendChild(logoBtn);
   const right=el("div","hdr-right");
   const addBtn=el("button","hdr-btn hdr-add","+ Add");
-  addBtn.addEventListener("click",()=>{ if(tab==="purchase"){ ppf=blankPP(); editPId=null; sheet="purchase"; } else{ pf=blankP(); editId=null; sheet="product"; } render(); });
+  addBtn.addEventListener("click",()=>{ if(tab==="purchase"){ editPId=null; sheet="purchase"; } else{ editId=null; sheet="product"; } render(); });
   right.appendChild(addBtn);
   // 3-dot menu
   const dotHeader=el("div","dot-header");
   const dotBtn=el("button","dot-header-btn","⋮");
   let dropdownDiv=null;
-  dotBtn.addEventListener("click",(e)=>{ e.stopPropagation(); if(dropdownDiv){ dropdownDiv.remove(); dropdownDiv=null; } else{ dropdownDiv=el("div","header-dropdown"); dropdownDiv.innerHTML=`<button id="menuBulk">🗑 Bulk Delete</button><button id="menuExport">📎 Export Excel</button><button id="menuImport">📥 Import Excel</button><button id="menuCats">🏷️ Manage Categories</button>${!firestoreEnabled ? `<button id="menuRetryFirebase" style="color:#0d9e8a">🔄 Retry Firebase</button>` : ''}<button id="menuHelp" style="color:#888">❓ Enable Cloud Sync</button>`; dropdownDiv.querySelector("#menuBulk")?.addEventListener("click",()=>{ if(tab!=="catalogue"){ toast("Switch to Catalogue tab first",true); return; } enterBulkMode(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuExport")?.addEventListener("click",()=>{ exportXL(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuImport")?.addEventListener("click",()=>{ triggerImport(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuCats")?.addEventListener("click",()=>{ sheet="categoryManager"; dropdownDiv?.remove(); dropdownDiv=null; render(); }); dropdownDiv.querySelector("#menuRetryFirebase")?.addEventListener("click",async()=>{ toast("Retrying Firebase..."); await initFirebase(true); dropdownDiv?.remove(); dropdownDiv=null; render(); }); dropdownDiv.querySelector("#menuHelp")?.addEventListener("click",()=>{ alert("To enable cloud sync:\n1. Go to Firebase Console → Authentication → Sign-in methods → Enable Anonymous Auth\n2. Go to Firestore Database → Create database (start in test mode)\n3. Then click 'Retry Firebase' in this menu"); dropdownDiv?.remove(); dropdownDiv=null; }); dotHeader.appendChild(dropdownDiv); } });
+  dotBtn.addEventListener("click",(e)=>{ e.stopPropagation(); if(dropdownDiv){ dropdownDiv.remove(); dropdownDiv=null; } else{ dropdownDiv=el("div","header-dropdown"); dropdownDiv.innerHTML=`<button id="menuBulk">🗑 Bulk Delete</button><button id="menuExport">📎 Export Excel</button><button id="menuImport">📥 Import Excel</button><button id="menuCats">🏷️ Manage Categories</button><button id="menuReset">🔄 Reset Sample Products</button>${!firestoreEnabled ? `<button id="menuRetryFirebase" style="color:#0d9e8a">🔄 Retry Firebase</button>` : ''}<button id="menuHelp" style="color:#888">❓ Enable Cloud Sync</button>`; dropdownDiv.querySelector("#menuBulk")?.addEventListener("click",()=>{ if(tab!=="catalogue"){ toast("Switch to Catalogue tab first",true); return; } enterBulkMode(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuExport")?.addEventListener("click",()=>{ exportXL(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuImport")?.addEventListener("click",()=>{ triggerImport(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuCats")?.addEventListener("click",()=>{ sheet="categoryManager"; dropdownDiv?.remove(); dropdownDiv=null; render(); }); dropdownDiv.querySelector("#menuReset")?.addEventListener("click",()=>{ resetSampleProducts(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuRetryFirebase")?.addEventListener("click",async()=>{ toast("Retrying Firebase..."); await initFirebase(true); dropdownDiv?.remove(); dropdownDiv=null; render(); }); dropdownDiv.querySelector("#menuHelp")?.addEventListener("click",()=>{ alert("To enable cloud sync:\n1. Firebase Console → Authentication → Sign-in methods → Enable Anonymous Auth\n2. Firestore Database → Rules → allow read, write: if request.auth != null;\n3. Then click Retry Firebase"); dropdownDiv?.remove(); dropdownDiv=null; }); dotHeader.appendChild(dropdownDiv); } });
   document.addEventListener("click",(e)=>{ if(!dotHeader.contains(e.target) && dropdownDiv){ dropdownDiv.remove(); dropdownDiv=null; } });
   dotHeader.appendChild(dotBtn);
   right.appendChild(dotHeader);
-  // Firebase status indicator
   if(firestoreEnabled){
     right.appendChild(el("span","sync-badge","☁️ Synced"));
   } else {
@@ -417,7 +596,7 @@ function render(){
     renderCards();
     renderBulkBar();
   } else if(tab==="purchase"){
-    app.appendChild(on(el("button","add-p-btn","+ Add to Purchase List"),"click",()=>{ ppf=blankPP(); editPId=null; sheet="purchase"; render(); }));
+    app.appendChild(on(el("button","add-p-btn","+ Add to Purchase List"),"click",()=>{ editPId=null; sheet="purchase"; render(); }));
     const pendingDiv=el("div",""), doneDiv=el("div","");
     const renderList=(list,container,title)=>{
       if(!list.length) return;
@@ -431,7 +610,7 @@ function render(){
         const nameDiv=el("div","p-name",p.name); const sub=el("div","p-sub",p.qty+" × "+inr(p.buyPrice)); nameDiv.appendChild(sub);
         const priceSpan=el("div","p-price",inr((+p.qty)*(+p.buyPrice||0)));
         const acts=el("div","p-acts");
-        const editBtn=el("button","p-edit-btn","Edit"); editBtn.addEventListener("click",()=>{ ppf={...p}; editPId=p.id; sheet="purchase"; render(); });
+        const editBtn=el("button","p-edit-btn","Edit"); editBtn.addEventListener("click",()=>{ editPId=p.id; sheet="purchase"; render(); });
         const delBtn=el("button","p-del-btn","🗑"); delBtn.addEventListener("click",()=>delP(p.id));
         acts.append(editBtn,delBtn);
         row.append(chk,nameDiv,priceSpan,acts);
@@ -443,25 +622,12 @@ function render(){
     renderList(purchases.filter(p=>p.done), doneDiv, "Completed");
     app.appendChild(pendingDiv); app.appendChild(doneDiv);
   }
-  // sheets (product, purchase, rename, categoryManager)
-  if(sheet==="product"){
-    let s=el("div","sheet"); s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">${editId?"Edit Product":"New Product"}</div>`; s.appendChild(field("Product name",inp(pf.name,"",v=>pf.name=v))); s.appendChild(field("Unit",inp(pf.unit,"e.g., per packet",v=>pf.unit=v))); s.appendChild(field("Category",categoryPicker(pf.category,v=>pf.category=v))); s.appendChild(field("Buy Price (₹)",inp(pf.buyPrice,"0",v=>pf.buyPrice=v,"number"))); s.appendChild(field("Sell Price (₹)",inp(pf.sellPrice,"0",v=>pf.sellPrice=v,"number"))); s.appendChild(field("Packet Price (₹)",inp(pf.packetPrice,"0",v=>pf.packetPrice=v,"number"))); let save=el("button","save-btn","✓ Save"); save.addEventListener("click",saveProduct); let cancel=el("button","cancel-btn","Cancel"); cancel.addEventListener("click",()=>{sheet=null;render();}); s.append(save,cancel); let ov=el("div","overlay"); ov.appendChild(s); app.appendChild(ov);
-  } else if(sheet==="purchase"){
-    let s=el("div","sheet"); s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">${editPId?"Edit Item":"Add to Purchase"}</div>`; s.appendChild(field("Product name",inp(ppf.name,"",v=>ppf.name=v))); s.appendChild(field("Quantity",inp(ppf.qty,"1",v=>ppf.qty=v,"number"))); s.appendChild(field("Buy Price (₹)",inp(ppf.buyPrice,"0",v=>ppf.buyPrice=v,"number"))); s.appendChild(field("Note",inp(ppf.note,"",v=>ppf.note=v))); let saveP=el("button","save-btn","✓ Save"); saveP.addEventListener("click",savePurchase); let cancelP=el("button","cancel-btn","Cancel"); cancelP.addEventListener("click",()=>{sheet=null;render();}); s.append(saveP,cancelP); let ov=el("div","overlay"); ov.appendChild(s); app.appendChild(ov);
-  } else if(sheet==="rename"){
-    let s=el("div","sheet"); s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">Rename Catalogue</div>`; let inpName=el("input","finput"); inpName.value=catalogueName; let saveR=el("button","save-btn","Save"); saveR.addEventListener("click",()=>saveCatalogueName(inpName.value)); let cancelR=el("button","cancel-btn","Cancel"); cancelR.addEventListener("click",()=>{sheet=null;render();}); s.append(inpName,saveR,cancelR); let ov=el("div","overlay"); ov.appendChild(s); app.appendChild(ov);
-  } else if(sheet==="categoryManager"){
-    let s=el("div","sheet"); s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">Manage Categories</div><div id="catList"></div><div class="cat-add-row" style="display:flex;gap:8px;margin-top:12px"><input id="newCatInput" placeholder="New category" style="flex:1;padding:10px;border-radius:10px;border:1px solid #ddd"/><button id="addCatBtn" style="padding:10px 16px;background:#111;color:#fff;border:none;border-radius:10px">+ Add</button></div><button class="cancel-btn" style="margin-top:16px">Close</button>`;
-    setTimeout(()=>{
-      const listDiv=s.querySelector("#catList");
-      categories.forEach(c=>{ let row=el("div","cat-item"); row.style.display="flex"; row.style.justifyContent="space-between"; row.style.padding="8px 0"; row.innerHTML=`<span>${c}</span><button class="cat-del" data-cat="${c}" style="background:none;border:none;color:#e33;font-size:18px">🗑</button>`; row.querySelector(".cat-del")?.addEventListener("click",()=>delCat(c)); listDiv.appendChild(row); });
-      const addBtn=s.querySelector("#addCatBtn"); const inpCat=s.querySelector("#newCatInput"); addBtn?.addEventListener("click",()=>{ newCat=inpCat.value; addCat(); inpCat.value=""; renderCategorySheet(); });
-      s.querySelector(".cancel-btn")?.addEventListener("click",()=>{sheet=null;render();});
-    },0);
-    let ov=el("div","overlay"); ov.appendChild(s); app.appendChild(ov);
-  }
+  // sheets
+  if(sheet==="product") renderProductSheet();
+  else if(sheet==="purchase") renderPurchaseSheet();
+  else if(sheet==="rename") renderRenameSheet();
+  else if(sheet==="categoryManager") renderCategorySheet();
 }
-// Start the app
 initFirebase();
 </script>
 </body>
