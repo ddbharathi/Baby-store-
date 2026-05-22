@@ -12,29 +12,31 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#111;background:#f5f5f5;min-height:100vh;padding-bottom:30px}
+html,body{width:100%;overflow-x:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#111;background:#f5f5f5;min-height:100vh;padding-bottom:30px;position:relative}
 input,select,button{font-family:inherit;font-size:14px}
 input:focus,select:focus{outline:none;border-color:#111!important}
 input::placeholder{color:#ccc}
 
 /* HEADER */
-.hdr{background:#fff;border-bottom:1px solid #e8e8e8;padding:0 14px;display:flex;align-items:center;justify-content:space-between;height:50px;position:sticky;top:0;z-index:100}
-.logo{font-weight:700;font-size:15px;letter-spacing:-.5px}
+.hdr{background:#fff;border-bottom:1px solid #e8e8e8;padding:0 14px;display:flex;align-items:center;justify-content:space-between;height:50px;position:sticky;top:0;left:0;right:0;z-index:100;width:100%}
+.logo{font-weight:700;font-size:15px;letter-spacing:-.5px;cursor:pointer;display:flex;align-items:center;gap:4px}
+.logo-edit{font-size:12px;color:#aaa}
 .hdr-right{display:flex;gap:6px;align-items:center}
 
 /* TOP TABS */
-.toptabs{display:flex;background:#efefef;border-radius:10px;padding:3px;margin:12px 14px 0}
+.toptabs{display:flex;background:#efefef;border-radius:10px;padding:3px;margin:12px 14px 0;width:calc(100% - 28px)}
 .toptab{flex:1;padding:8px 0;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;background:transparent;color:#888;transition:all .15s;position:relative}
 .toptab.active{background:#fff;color:#111;box-shadow:0 1px 4px #0001}
 .tbadge{background:#111;color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;margin-left:4px}
 
 /* SEARCH + FILTER */
-.searchbar{display:flex;gap:8px;padding:10px 14px}
-.searchbar input{flex:1;border:1px solid #e0e0e0;border-radius:8px;padding:9px 12px;background:#fff;color:#111;font-size:14px}
-.searchbar select{flex:0 0 110px;border:1px solid #e0e0e0;border-radius:8px;padding:9px 10px;background:#fff;color:#111}
+.searchbar{display:flex;gap:8px;padding:10px 14px;width:100%;box-sizing:border-box}
+.searchbar input{flex:1;min-width:0;border:1px solid #e0e0e0;border-radius:8px;padding:9px 12px;background:#fff;color:#111;font-size:14px}
+.searchbar select{flex:0 0 110px;min-width:0;border:1px solid #e0e0e0;border-radius:8px;padding:9px 10px;background:#fff;color:#111;max-width:110px}
 
 /* PRODUCT CARDS */
-.cards{padding:0 14px;display:flex;flex-direction:column;gap:10px}
+.cards{padding:0 14px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;width:100%}
 .card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px #0001}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px}
 .card-name{font-size:16px;font-weight:800;flex:1;word-break:break-word}
@@ -106,7 +108,7 @@ input::placeholder{color:#ccc}
 .cancel-btn{width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:12px;background:#fff;color:#666;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px}
 
 /* BUTTONS */
-.hdr-btn{cursor:pointer;border:none;border-radius:7px;font-weight:600;font-size:12px;padding:7px 12px;background:transparent;color:#666;border:1px solid #e0e0e0}
+.hdr-btn{cursor:pointer;border:1px solid #e0e0e0;border-radius:7px;font-weight:600;font-size:12px;padding:7px 12px;background:transparent;color:#666}
 .hdr-add{background:#111;color:#fff;border:none}
 
 /* CAT MANAGE */
@@ -122,6 +124,18 @@ input::placeholder{color:#ccc}
 .terr{background:#e33;color:#fff}
 
 .empty{text-align:center;padding:48px 20px;color:#ccc;font-size:14px}
+
+/* CATEGORY PICKER */
+.cat-picker{position:relative}
+.cat-picker-input{width:100%;border:1.5px solid #e8e8e8;border-radius:10px;padding:11px 38px 11px 12px;font-size:15px;color:#111;background:#fff;font-family:inherit}
+.cat-picker-input:focus{outline:none;border-color:#111}
+.cat-picker-input::placeholder{color:#ccc}
+.cat-picker-arrow{position:absolute;right:12px;top:14px;color:#aaa;font-size:16px;cursor:pointer}
+.cat-dropdown{background:#fff;border:1.5px solid #e8e8e8;border-radius:10px;margin-top:4px;overflow:hidden;box-shadow:0 4px 16px #0002}
+.cat-opt{padding:12px 14px;font-size:15px;cursor:pointer;border-bottom:1px solid #f5f5f5;color:#111}
+.cat-opt:last-child{border-bottom:none}
+.cat-opt:active{background:#f5f5f5}
+.cat-opt.selected{color:#0d9e8a;font-weight:700}
 </style>
 </head>
 <body>
@@ -130,6 +144,9 @@ input::placeholder{color:#ccc}
 <script>
 function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+
+// FIX 1: catalogueName is now a saved, editable value
+let catalogueName = load("cat_name", "Catalogue");
 
 let products  = load("cat_products",[
   {id:1,name:"100ml Itc",unit:"per packet",category:"Paper Cup",buyPrice:22,sellPrice:25,packetPrice:25,godown:"",note:""},
@@ -140,13 +157,20 @@ let purchases  = load("cat_purchases",[]);
 let npid  = load("cat_npid",3);
 let nppid = load("cat_nppid",1);
 
-let tab="catalogue", search="", filterCat="All";
+let tab="catalogue", filterCat="All";
 let openMenu=null, sheet=null, editId=null, editPId=null, newCat="";
 let pf=blankP(), ppf=blankPP();
 
+// FIX 3: search lives outside render() so it never gets wiped on re-render
+let searchVal = "";
+
 function blankP(){return{name:"",unit:"per packet",category:"",buyPrice:"",sellPrice:"",packetPrice:"",godown:"",note:""};}
 function blankPP(){return{name:"",qty:"1",buyPrice:"",note:""};}
-function persist(){save("cat_products",products);save("cat_cats",categories);save("cat_purchases",purchases);save("cat_npid",npid);save("cat_nppid",nppid);}
+function persist(){
+  save("cat_products",products);save("cat_cats",categories);save("cat_purchases",purchases);
+  save("cat_npid",npid);save("cat_nppid",nppid);
+  save("cat_name",catalogueName); // persist name too
+}
 
 let tt;
 function toast(msg,err){
@@ -185,18 +209,39 @@ function clearDone(){purchases=purchases.filter(p=>!p.done);persist();render();}
 function addCat(){const c=newCat.trim();if(!c){toast("Enter name",true);return;}if(categories.includes(c)){toast("Already exists",true);return;}categories=[...categories,c];newCat="";persist();render();}
 function delCat(c){categories=categories.filter(x=>x!==c);persist();render();}
 
+// FIX 1: Save and rename catalogue name
+function saveCatalogueName(name){
+  if(!name.trim()){toast("Enter a name",true);return;}
+  catalogueName=name.trim();
+  persist();
+  sheet=null;
+  render();
+  toast("Name saved");
+}
+
+// FIX 2: Export includes catalogue name in a special row; Import reads it back
 function exportXL(){
   const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(products.map(p=>({
+  // Store catalogue name as first row with special key
+  const catData = [{
+    "__catalogue_name__": catalogueName,
+    "Product Name":"","Unit":"","Category":"",
+    "Buy Price (₹)":"","Sell Price (₹)":"","Packet Price (₹)":"","Godown":"","Note":""
+  }];
+  const productRows = products.map(p=>({
+    "__catalogue_name__":"",
     "Product Name":p.name,"Unit":p.unit,"Category":p.category,
     "Buy Price (₹)":p.buyPrice,"Sell Price (₹)":p.sellPrice,"Packet Price (₹)":p.packetPrice,
     "Godown":p.godown,"Note":p.note,
-  }))),"Catalogue");
+  }));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([...catData,...productRows]),"Catalogue");
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(purchases.map(p=>({
     "Product":p.name,"Qty":p.qty,"Buy Price (₹)":p.buyPrice,"Note":p.note,"Status":p.done?"Done":"Pending",
   }))),"Purchase List");
-  XLSX.writeFile(wb,"Catalogue.xlsx");toast("Exported");
+  XLSX.writeFile(wb,(catalogueName||"Catalogue")+".xlsx");
+  toast("Exported");
 }
+
 function importXL(e){
   const f=e.target.files[0];if(!f)return;
   const r=new FileReader();
@@ -204,15 +249,25 @@ function importXL(e){
     try{
       const wb=XLSX.read(ev.target.result,{type:"binary"});
       const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws);
+      // FIX 2: Read catalogue name from first row if present
+      if(rows.length && rows[0]["__catalogue_name__"]){
+        const importedName = rows[0]["__catalogue_name__"];
+        if(importedName) catalogueName = importedName;
+      }
       let id=npid;
-      const mapped=XLSX.utils.sheet_to_json(ws).map(r=>({
-        id:id++,name:r["Product Name"]||"",unit:r["Unit"]||"per packet",category:r["Category"]||"",
-        buyPrice:r["Buy Price (₹)"]!==undefined?+r["Buy Price (₹)"]:"",
-        sellPrice:r["Sell Price (₹)"]!==undefined?+r["Sell Price (₹)"]:"",
-        packetPrice:r["Packet Price (₹)"]!==undefined?+r["Packet Price (₹)"]:"",
-        godown:r["Godown"]||"",note:r["Note"]||"",
-      })).filter(r=>r.name);
-      products=[...products,...mapped];npid=id;persist();toast(`Imported ${mapped.length} products`);render();
+      const mapped=rows
+        .filter(r=>r["Product Name"]) // skip the name-row and empty rows
+        .map(r=>({
+          id:id++,name:r["Product Name"]||"",unit:r["Unit"]||"per packet",category:r["Category"]||"",
+          buyPrice:r["Buy Price (₹)"]!==undefined?+r["Buy Price (₹)"]:"",
+          sellPrice:r["Sell Price (₹)"]!==undefined?+r["Sell Price (₹)"]:"",
+          packetPrice:r["Packet Price (₹)"]!==undefined?+r["Packet Price (₹)"]:"",
+          godown:r["Godown"]||"",note:r["Note"]||"",
+        }));
+      products=[...products,...mapped];npid=id;persist();
+      toast(`Imported ${mapped.length} products`);
+      render();
     }catch{toast("Import failed",true);}
   };
   r.readAsBinaryString(f);e.target.value="";
@@ -236,14 +291,21 @@ function field(label,child,cls){const w=el("div","field"+(cls?" "+cls:""));w.app
 function render(){
   const app=document.getElementById("app");app.innerHTML="";
 
-  // Header
+  // Header — FIX 1: show editable catalogueName, tap to rename
   const hdr=el("div","hdr");
-  hdr.appendChild(el("span","logo","Catalogue"));
+  const logoBtn=el("button","logo");
+  logoBtn.style.cssText="background:none;border:none;padding:0;cursor:pointer;font-weight:700;font-size:15px;letter-spacing:-.5px;display:flex;align-items:center;gap:4px";
+  logoBtn.appendChild(document.createTextNode(catalogueName));
+  const editIcon=el("span","logo-edit","✏️");
+  logoBtn.appendChild(editIcon);
+  logoBtn.addEventListener("click",()=>{sheet="rename";render();});
+  hdr.appendChild(logoBtn);
+
   const hr=el("div","hdr-right");
   const fi=el("input","");fi.type="file";fi.accept=".xlsx,.xls";fi.style.display="none";fi.addEventListener("change",importXL);
   hr.appendChild(fi);
-  hr.appendChild(on(el("button","hdr-btn","↓"),  "click",()=>fi.click()));
-  hr.appendChild(on(el("button","hdr-btn","↑"),  "click",exportXL));
+  hr.appendChild(on(el("button","hdr-btn","↓"),"click",()=>fi.click()));
+  hr.appendChild(on(el("button","hdr-btn","↑"),"click",exportXL));
   hr.appendChild(on(el("button","hdr-btn hdr-add","+ Add"),"click",()=>{
     if(tab==="purchase"){ppf=blankPP();editPId=null;sheet="purchase";}
     else{pf=blankP();editId=null;sheet="product";}
@@ -264,61 +326,26 @@ function render(){
   // ── CATALOGUE ──────────────────────────────────────────────────────────
   if(tab==="catalogue"){
     const sb=el("div","searchbar");
-    const si=el("input","");si.placeholder="Search products...";si.value=search;si.style.cssText="flex:1;border:1px solid #e0e0e0;border-radius:8px;padding:9px 12px;background:#fff;font-size:14px;color:#111";
-    si.addEventListener("input",e=>{search=e.target.value;render();});
-    const cs=selEl(["All",...categories],filterCat,e=>{filterCat=e.target.value;render();});
+
+    // FIX 3: Search input — update searchVal but DON'T call render().
+    // Instead only update the cards in-place so keyboard never dismisses.
+    const si=el("input","");
+    si.placeholder="Search products...";
+    si.value=searchVal;
+    si.style.cssText="flex:1;border:1px solid #e0e0e0;border-radius:8px;padding:9px 12px;background:#fff;font-size:14px;color:#111";
+    si.addEventListener("input",e=>{
+      searchVal=e.target.value;
+      renderCards(); // only refresh cards, not the whole page
+    });
+
+    const cs=selEl(["All",...categories],filterCat,e=>{filterCat=e.target.value;renderCards();});
     cs.className="";cs.style.cssText="flex:0 0 110px;border:1px solid #e0e0e0;border-radius:8px;padding:9px 10px;background:#fff;color:#111;font-size:14px";
     sb.appendChild(si);sb.appendChild(cs);app.appendChild(sb);
 
-    const cards=el("div","cards");
-    const filtered=products.filter(p=>
-      (filterCat==="All"||p.category===filterCat)&&
-      (p.name.toLowerCase().includes(search.toLowerCase())||(p.category||"").toLowerCase().includes(search.toLowerCase()))
-    );
-    if(!filtered.length){cards.appendChild(el("div","empty","No products yet. Tap + Add to start."));}
-    filtered.forEach(p=>{
-      const card=el("div","card");
-      const ctop=el("div","card-top");
-      ctop.appendChild(el("div","card-name",p.name));
-      const tr=el("div","");tr.style.cssText="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px";
-      if(p.category)tr.appendChild(el("span","cat-badge",p.category));
-      // 3-dot
-      const dw=el("div","dot-wrap");
-      const db=el("button","dot-btn","⋮");
-      db.addEventListener("click",e=>{e.stopPropagation();openMenu=openMenu===p.id?null:p.id;render();});
-      dw.appendChild(db);
-      if(openMenu===p.id){
-        const dm=el("div","dot-menu");
-        const eb=el("button","","✏️  Edit");eb.addEventListener("click",()=>openEdit(p));
-        const dd=el("div","dot-div");
-        const dlb=el("button","dot-del","🗑️  Delete");dlb.addEventListener("click",()=>delProduct(p.id));
-        dm.appendChild(eb);dm.appendChild(dd);dm.appendChild(dlb);dw.appendChild(dm);
-      }
-      tr.appendChild(dw);ctop.appendChild(tr);card.appendChild(ctop);
-      // unit / godown
-      const meta=[];
-      if(p.unit)meta.push(p.unit);
-      if(p.godown)meta.push("📦 "+p.godown);
-      if(p.note)meta.push(p.note);
-      if(meta.length)card.appendChild(el("div","card-meta",meta.join("  ·  ")));
-      // price boxes
-      const pb=el("div","price-boxes");
-      [{label:"BUY",val:p.buyPrice,cls:"pbox-buy"},{label:"SELL",val:p.sellPrice,cls:"pbox-sell"},{label:"PACKET",val:p.packetPrice,cls:"pbox-pkt"}].forEach(b=>{
-        const box=el("div","pbox "+b.cls);
-        box.appendChild(el("div","pbox-label",b.label));
-        box.appendChild(el("div","pbox-val",inr(b.val)));
-        pb.appendChild(box);
-      });
-      card.appendChild(pb);
-      // actions
-      const acts=el("div","card-actions");
-      const eb=el("button","card-btn","✏️ Edit");eb.addEventListener("click",()=>openEdit(p));
-      const div=el("div","card-divider");
-      const ab=el("button","card-btn card-btn-green","🛒 Add to Purchase");ab.addEventListener("click",()=>addToPurchase(p));
-      acts.appendChild(eb);acts.appendChild(div);acts.appendChild(ab);card.appendChild(acts);
-      cards.appendChild(card);
-    });
-    app.appendChild(cards);
+    // FIX 3: Cards live in their own div so they can be refreshed without touching the search input
+    const cardsWrap=el("div","");cardsWrap.id="cards-wrap";
+    app.appendChild(cardsWrap);
+    renderCards();
   }
 
   // ── PURCHASE LIST ──────────────────────────────────────────────────────
@@ -334,10 +361,11 @@ function render(){
         const cb=el("input","p-check");cb.type="checkbox";cb.addEventListener("change",()=>toggleP(x.id));
         const info=el("div","");info.style.flex="1";
         info.appendChild(el("div","p-name",x.name+(+x.qty>1?" ×"+x.qty:"")));
-        if(x.buyPrice||x.note)info.appendChild(el("div","p-sub",[x.buyPrice?"Buy ₹"+x.buyPrice:"",x.note].filter(Boolean).join(" · ")));
+        const sub=[];if(x.buyPrice)sub.push("₹"+x.buyPrice);if(x.note)sub.push(x.note);
+        if(sub.length)info.appendChild(el("div","p-sub",sub.join(" · ")));
         const acts=el("div","p-acts");
         acts.appendChild(on(el("button","p-edit-btn","Edit"),"click",()=>{ppf={...x};editPId=x.id;sheet="purchase";render();}));
-        acts.appendChild(on(el("button","p-del-btn","✕"),"click",()=>delP(x.id)));
+        acts.appendChild(on(el("button","p-del-btn","×"),"click",()=>delP(x.id)));
         row.appendChild(cb);row.appendChild(info);row.appendChild(acts);c.appendChild(row);app.appendChild(c);
       });
     }
@@ -349,108 +377,227 @@ function render(){
       dn.forEach(x=>{
         const c=el("div","p-card p-done");const row=el("div","p-row");
         const cb=el("input","p-check");cb.type="checkbox";cb.checked=true;cb.addEventListener("change",()=>toggleP(x.id));
-        const nm=el("div","p-name",x.name+(+x.qty>1?" ×"+x.qty:""));
-        const db=on(el("button","p-del-btn","✕"),"click",()=>delP(x.id));
-        row.appendChild(cb);row.appendChild(nm);row.appendChild(db);c.appendChild(row);app.appendChild(c);
+        const info=el("div","");info.style.flex="1";
+        info.appendChild(el("div","p-name",x.name));
+        row.appendChild(cb);row.appendChild(info);
+        row.appendChild(on(el("button","p-del-btn","×"),"click",()=>delP(x.id)));
+        c.appendChild(row);app.appendChild(c);
       });
     }
   }
 
-  // ── IMPORT / EXPORT ───────────────────────────────────────────────────
+  // ── IMPORT / EXPORT ────────────────────────────────────────────────────
   else if(tab==="importexport"){
     const w=el("div","ie-wrap");
+
     const ec=el("div","ie-card");
-    ec.appendChild(el("div","ie-title","📤 Export to Excel"));
-    ec.appendChild(el("div","ie-sub","Download all products and purchase list as .xlsx file."));
-    ec.appendChild(on(el("button","ie-btn ie-green","↑ Export Excel"),"click",exportXL));
+    ec.appendChild(el("div","ie-title","Export"));
+    ec.appendChild(el("div","ie-sub","Download all products and purchase list as an Excel file. Catalogue name is saved inside the file."));
+    ec.appendChild(on(el("button","ie-btn ie-green","↑  Export to Excel"),"click",exportXL));
     w.appendChild(ec);
+
     const ic=el("div","ie-card");
-    ic.appendChild(el("div","ie-title","📥 Import from Excel"));
-    ic.appendChild(el("div","ie-sub","Columns: Product Name, Unit, Category, Buy Price (₹), Sell Price (₹), Packet Price (₹), Godown, Note"));
+    ic.appendChild(el("div","ie-title","Import"));
+    ic.appendChild(el("div","ie-sub","Import products from an Excel file. Catalogue name will also be restored from the file."));
     const fi2=el("input","");fi2.type="file";fi2.accept=".xlsx,.xls";fi2.style.display="none";fi2.addEventListener("change",importXL);
-    ic.appendChild(fi2);
-    ic.appendChild(on(el("button","ie-btn ie-gray","↓ Import Excel"),"click",()=>fi2.click()));
+    w.appendChild(fi2);
+    ic.appendChild(on(el("button","ie-btn ie-gray","↓  Import from Excel"),"click",()=>fi2.click()));
     w.appendChild(ic);
+
+    // Manage Categories
     const cc=el("div","ie-card");
-    cc.appendChild(el("div","ie-title","🏷️ Manage Categories"));
-    cc.appendChild(el("div","ie-sub","Add or remove product categories."));
-    cc.appendChild(on(el("button","ie-btn ie-gray","Manage Categories"),"click",()=>{sheet="categories";render();}));
-    w.appendChild(cc);
+    cc.appendChild(el("div","ie-title","Categories"));
+    categories.forEach(c=>{
+      const ci=el("div","cat-item");
+      ci.appendChild(el("span","",c));
+      ci.appendChild(on(el("button","cat-del","×"),"click",()=>delCat(c)));
+      cc.appendChild(ci);
+    });
+    const ar=el("div","cat-add-row");
+    const ni=el("input","");ni.placeholder="New category…";ni.value=newCat;ni.style.cssText="flex:1;border:1.5px solid #e8e8e8;border-radius:10px;padding:10px 12px;font-size:14px";
+    ni.addEventListener("input",e=>{newCat=e.target.value;});
+    ar.appendChild(ni);
+    ar.appendChild(on(el("button","cat-add-btn","Add"),"click",addCat));
+    cc.appendChild(ar);w.appendChild(cc);
     app.appendChild(w);
   }
 
-  // ── SHEET ─────────────────────────────────────────────────────────────
+  // ── SHEETS (modals) ────────────────────────────────────────────────────
   if(sheet){
     const ov=el("div","overlay");
-    ov.addEventListener("click",e=>{if(e.target===ov){sheet=null;editId=null;editPId=null;render();}});
-    const s=el("div","sheet");
-    s.appendChild(el("div","sheet-handle"));
+    ov.addEventListener("click",e=>{if(e.target===ov){sheet=null;render();}});
+    const sh=el("div","sheet");
+    sh.appendChild(el("div","sheet-handle"));
 
-    if(sheet==="product"){
-      s.appendChild(el("div","sheet-title",editId!=null?"Edit Product":"New Product"));
-      s.appendChild(field("Product Name *",inp(pf.name,"e.g. 100ml Itc",e=>{pf.name=e.target.value;})));
-      const r1=el("div","frow2");
-      r1.appendChild(field("Unit",inp(pf.unit,"per packet",e=>{pf.unit=e.target.value;})));
-      r1.appendChild(field("Category",selEl([{v:"",l:"-- Select --"},...categories.map(c=>({v:c,l:c}))],pf.category,e=>{pf.category=e.target.value;})));
-      s.appendChild(r1);
-      // BUY first, then SELL, then PACKET
-      s.appendChild(el("span","flabel","Prices (₹)"));
-      const r2=el("div","frow3");r2.style.marginBottom="12px";
-      [{label:"Buy Price",key:"buyPrice",ph:"22"},{label:"Sell Price",key:"sellPrice",ph:"25"},{label:"Packet",key:"packetPrice",ph:"25"}].forEach(f=>{
-        const fd=el("div","field");fd.style.marginBottom="0";
-        fd.appendChild(el("span","flabel",f.label));
-        const i=inp(pf[f.key],f.ph,e=>{pf[f.key]=e.target.value;},"number");
-        fd.appendChild(i);r2.appendChild(fd);
-      });
-      s.appendChild(r2);
-      s.appendChild(field("Godown (optional)",inp(pf.godown,"e.g. Main Godown",e=>{pf.godown=e.target.value;})));
-      s.appendChild(field("Note",inp(pf.note,"Optional",e=>{pf.note=e.target.value;})));
-      s.appendChild(on(el("button","save-btn",editId!=null?"Save Changes":"Add Product"),"click",saveProduct));
-      s.appendChild(on(el("button","cancel-btn","Cancel"),"click",()=>{sheet=null;editId=null;pf=blankP();render();}));
+    // RENAME CATALOGUE SHEET (FIX 1)
+    if(sheet==="rename"){
+      sh.appendChild(el("div","sheet-title","Rename Catalogue"));
+      const nameInp=el("input","finput");
+      nameInp.placeholder="Enter catalogue name…";
+      nameInp.value=catalogueName;
+      nameInp.style.marginBottom="12px";
+      // Auto-focus
+      setTimeout(()=>nameInp.focus(),80);
+      sh.appendChild(nameInp);
+      sh.appendChild(on(el("button","save-btn","Save Name"),"click",()=>saveCatalogueName(nameInp.value)));
+      sh.appendChild(on(el("button","cancel-btn","Cancel"),"click",()=>{sheet=null;render();}));
     }
 
+    // ADD / EDIT PRODUCT SHEET
+    else if(sheet==="product"){
+      sh.appendChild(el("div","sheet-title",editId!=null?"Edit Product":"Add Product"));
+      sh.appendChild(field("Product Name *",inp(pf.name,"e.g. 100ml Itc",e=>pf.name=e.target.value)));
+
+      // Custom category picker — type own name OR tap existing
+      const catWrap=el("div","field");
+      catWrap.appendChild(el("span","flabel","Category"));
+      const picker=el("div","cat-picker");
+      const catInp=el("input","cat-picker-input");
+      catInp.placeholder="Type or pick category…";
+      catInp.value=pf.category||"";
+      const arrow=el("span","cat-picker-arrow","▾");
+      const dropWrap=el("div","");
+      let dropOpen=false;
+
+      function buildDrop(filter){
+        const dd=el("div","cat-dropdown");
+        const opts=categories.filter(c=>!filter||c.toLowerCase().includes(filter.toLowerCase()));
+        const typed=catInp.value.trim();
+        if(!opts.length){
+          if(typed){
+            const none=el("div","cat-opt",`+ Add \"${typed}\" as new`);
+            none.style.color="#0d9e8a";
+            none.addEventListener("mousedown",e=>{
+              e.preventDefault();
+              if(!categories.includes(typed)){categories.push(typed);save("cat_cats",categories);}
+              pf.category=typed;catInp.value=typed;dropWrap.innerHTML="";dropOpen=false;
+            });
+            dd.appendChild(none);
+          }
+        } else {
+          opts.forEach(c=>{
+            const o=el("div","cat-opt"+(c===pf.category?" selected":""),c);
+            o.addEventListener("mousedown",e=>{
+              e.preventDefault();
+              pf.category=c;catInp.value=c;dropWrap.innerHTML="";dropOpen=false;
+            });
+            dd.appendChild(o);
+          });
+          if(typed&&!categories.includes(typed)){
+            const addOpt=el("div","cat-opt",`+ Add \"${typed}\" as new`);
+            addOpt.style.color="#0d9e8a";
+            addOpt.addEventListener("mousedown",e=>{
+              e.preventDefault();
+              if(!categories.includes(typed)){categories.push(typed);save("cat_cats",categories);}
+              pf.category=typed;catInp.value=typed;dropWrap.innerHTML="";dropOpen=false;
+            });
+            dd.appendChild(addOpt);
+          }
+        }
+        dropWrap.innerHTML="";dropWrap.appendChild(dd);
+      }
+
+      catInp.addEventListener("focus",()=>{dropOpen=true;buildDrop("");});
+      catInp.addEventListener("input",e=>{pf.category=e.target.value;buildDrop(e.target.value);});
+      catInp.addEventListener("blur",()=>{setTimeout(()=>{dropWrap.innerHTML="";dropOpen=false;},200);});
+      arrow.style.cursor="pointer";
+      arrow.addEventListener("click",()=>{
+        if(dropOpen){dropWrap.innerHTML="";dropOpen=false;}
+        else{dropOpen=true;buildDrop("");catInp.focus();}
+      });
+
+      picker.appendChild(catInp);picker.appendChild(arrow);picker.appendChild(dropWrap);
+      catWrap.appendChild(picker);sh.appendChild(catWrap);
+      sh.appendChild(field("Unit",inp(pf.unit,"e.g. per packet",e=>pf.unit=e.target.value)));
+      const pr=el("div","field frow2");
+      pr.appendChild(field("Buy Price (₹)",inp(pf.buyPrice,"",e=>pf.buyPrice=e.target.value,"number")));
+      pr.appendChild(field("Sell Price (₹)",inp(pf.sellPrice,"",e=>pf.sellPrice=e.target.value,"number")));
+      sh.appendChild(pr);
+      sh.appendChild(field("Packet Price (₹)",inp(pf.packetPrice,"",e=>pf.packetPrice=e.target.value,"number")));
+      sh.appendChild(field("Godown (optional)",inp(pf.godown,"",e=>pf.godown=e.target.value)));
+      sh.appendChild(field("Note (optional)",inp(pf.note,"",e=>pf.note=e.target.value)));
+      sh.appendChild(on(el("button","save-btn",editId!=null?"Update Product":"Add Product"),"click",saveProduct));
+      sh.appendChild(on(el("button","cancel-btn","Cancel"),"click",()=>{sheet=null;editId=null;pf=blankP();render();}));
+    }
+
+    // ADD / EDIT PURCHASE SHEET
     else if(sheet==="purchase"){
-      s.appendChild(el("div","sheet-title",editPId!=null?"Edit Item":"Add to Purchase List"));
-      s.appendChild(field("Product Name *",inp(ppf.name,"Product name",e=>{ppf.name=e.target.value;})));
-      const r1=el("div","frow2");
-      r1.appendChild(field("Qty",inp(ppf.qty,"1",e=>{ppf.qty=e.target.value;},"number")));
-      r1.appendChild(field("Buy Price (₹)",inp(ppf.buyPrice,"Expected",e=>{ppf.buyPrice=e.target.value;},"number")));
-      s.appendChild(r1);
-      s.appendChild(field("Note",inp(ppf.note,"Optional",e=>{ppf.note=e.target.value;})));
-      s.appendChild(on(el("button","save-btn",editPId!=null?"Save Changes":"Add to List"),"click",savePurchase));
-      s.appendChild(on(el("button","cancel-btn","Cancel"),"click",()=>{sheet=null;editPId=null;ppf=blankPP();render();}));
+      sh.appendChild(el("div","sheet-title",editPId!=null?"Edit Purchase Item":"Add to Purchase"));
+      sh.appendChild(field("Product Name *",inp(ppf.name,"",e=>ppf.name=e.target.value)));
+      const pr2=el("div","field frow2");
+      pr2.appendChild(field("Qty",inp(ppf.qty,"1",e=>ppf.qty=e.target.value,"number")));
+      pr2.appendChild(field("Buy Price (₹)",inp(ppf.buyPrice,"",e=>ppf.buyPrice=e.target.value,"number")));
+      sh.appendChild(pr2);
+      sh.appendChild(field("Note",inp(ppf.note,"",e=>ppf.note=e.target.value)));
+      sh.appendChild(on(el("button","save-btn",editPId!=null?"Update":"Add"),"click",savePurchase));
+      sh.appendChild(on(el("button","cancel-btn","Cancel"),"click",()=>{sheet=null;editPId=null;ppf=blankPP();render();}));
     }
 
-    else if(sheet==="categories"){
-      s.appendChild(el("div","sheet-title","Manage Categories"));
-      categories.forEach(c=>{
-        const row=el("div","cat-item");
-        row.appendChild(el("span","",c));
-        row.appendChild(on(el("button","cat-del","✕"),"click",()=>delCat(c)));
-        s.appendChild(row);
-      });
-      const ar=el("div","cat-add-row");
-      const ci=el("input","");ci.placeholder="New category name...";ci.value=newCat;ci.className="";
-      ci.style.cssText="flex:1;border:1.5px solid #e8e8e8;border-radius:10px;padding:10px 12px;font-size:14px";
-      ci.addEventListener("input",e=>{newCat=e.target.value;});
-      ar.appendChild(ci);ar.appendChild(on(el("button","cat-add-btn","Add"),"click",addCat));
-      s.appendChild(ar);
-      s.appendChild(on(el("button","cancel-btn","Close"),"click",()=>{sheet=null;render();}));
-    }
-
-    ov.appendChild(s);app.appendChild(ov);
-  }
-
-  // close dot menu on outside tap
-  if(openMenu!==null){
-    setTimeout(()=>{
-      document.addEventListener("click",function h(){openMenu=null;render();document.removeEventListener("click",h);},{once:true});
-    },0);
+    ov.appendChild(sh);app.appendChild(ov);
   }
 }
 
+// FIX 3: Separate function that ONLY refreshes the cards div — search input untouched
+function renderCards(){
+  const wrap = document.getElementById("cards-wrap");
+  if(!wrap) return; // not on catalogue tab
+
+  const s = searchVal.toLowerCase();
+  const filtered = products.filter(p=>
+    (filterCat==="All"||p.category===filterCat)&&
+    (p.name.toLowerCase().includes(s)||(p.category||"").toLowerCase().includes(s))
+  );
+
+  const cards=el("div","cards");
+  if(!filtered.length){cards.appendChild(el("div","empty","No products found."));}
+  filtered.forEach(p=>{
+    const card=el("div","card");
+    const ctop=el("div","card-top");
+    ctop.appendChild(el("div","card-name",p.name));
+    const tr=el("div","");tr.style.cssText="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px";
+    if(p.category)tr.appendChild(el("span","cat-badge",p.category));
+    // 3-dot menu
+    const dw=el("div","dot-wrap");
+    const db=el("button","dot-btn","⋮");
+    db.addEventListener("click",e=>{e.stopPropagation();openMenu=openMenu===p.id?null:p.id;renderCards();});
+    dw.appendChild(db);
+    if(openMenu===p.id){
+      const dm=el("div","dot-menu");
+      const eb=el("button","","✏️  Edit");eb.addEventListener("click",()=>openEdit(p));
+      const dd=el("div","dot-div");
+      const dlb=el("button","dot-del","🗑️  Delete");dlb.addEventListener("click",()=>delProduct(p.id));
+      dm.appendChild(eb);dm.appendChild(dd);dm.appendChild(dlb);dw.appendChild(dm);
+    }
+    tr.appendChild(dw);ctop.appendChild(tr);card.appendChild(ctop);
+    const meta=[];
+    if(p.unit)meta.push(p.unit);
+    if(p.godown)meta.push("📦 "+p.godown);
+    if(p.note)meta.push(p.note);
+    if(meta.length)card.appendChild(el("div","card-meta",meta.join("  ·  ")));
+    const pb=el("div","price-boxes");
+    [{label:"BUY",val:p.buyPrice,cls:"pbox-buy"},{label:"SELL",val:p.sellPrice,cls:"pbox-sell"},{label:"PACKET",val:p.packetPrice,cls:"pbox-pkt"}].forEach(b=>{
+      const box=el("div","pbox "+b.cls);
+      box.appendChild(el("div","pbox-label",b.label));
+      box.appendChild(el("div","pbox-val",inr(b.val)));
+      pb.appendChild(box);
+    });
+    card.appendChild(pb);
+    const acts=el("div","card-actions");
+    const eb2=el("button","card-btn","✏️ Edit");eb2.addEventListener("click",()=>openEdit(p));
+    const div2=el("div","card-divider");
+    const ab=el("button","card-btn card-btn-green","🛒 Add to Purchase");ab.addEventListener("click",()=>addToPurchase(p));
+    acts.appendChild(eb2);acts.appendChild(div2);acts.appendChild(ab);card.appendChild(acts);
+    cards.appendChild(card);
+  });
+
+  wrap.innerHTML="";
+  wrap.appendChild(cards);
+}
+
+// Close menus on outside tap
+document.addEventListener("click",()=>{if(openMenu!=null){openMenu=null;renderCards();}});
+
 render();
-if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script>
 </body>
 </html>
