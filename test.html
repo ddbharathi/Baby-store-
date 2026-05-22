@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Firebase Test</title>
+</head>
+<body style="font-family:sans-serif;padding:20px;font-size:15px">
+<h2>Firebase Connection Test</h2>
+<div id="status" style="padding:14px;border-radius:8px;background:#f0f0f0;margin:10px 0">⏳ Testing...</div>
+<div id="data" style="padding:14px;border-radius:8px;background:#f8f8f8;margin:10px 0;font-size:12px;word-break:break-all"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const s = document.getElementById("status");
+const d = document.getElementById("data");
+
+s.textContent = "⏳ Connecting to Firebase...";
+
+try {
+  const app = initializeApp({
+    apiKey: "AIzaSyC2AarE6wb92i14kE2Lly3I5PeYOKq_em8",
+    authDomain: "baby-store-a1b39.firebaseapp.com",
+    projectId: "baby-store-a1b39",
+    storageBucket: "baby-store-a1b39.firebasestorage.app",
+    messagingSenderId: "452754922308",
+    appId: "1:452754922308:web:6dc7ff7f8294e7b21cd511"
+  });
+
+  s.textContent = "⏳ Firebase initialized. Listening...";
+  s.style.background = "#fff3cd";
+
+  const db = getFirestore(app);
+  const ref = doc(db, "appData", "catalogue");
+
+  onSnapshot(ref,
+    (snap) => {
+      if(snap.exists()){
+        const data = snap.data();
+        s.style.background = "#d4edda";
+        s.textContent = "✅ SUCCESS! Got " + (data.products||[]).length + " products from Firebase.";
+        d.textContent = "Products: " + (data.products||[]).map(p=>p.name).join(", ");
+      } else {
+        s.style.background = "#fff3cd";
+        s.textContent = "⚠️ Connected but no data found.";
+      }
+    },
+    (err) => {
+      s.style.background = "#f8d7da";
+      s.textContent = "❌ ERROR: " + err.message;
+      d.textContent = "Code: " + err.code;
+    }
+  );
+} catch(e) {
+  s.style.background = "#f8d7da";
+  s.textContent = "❌ Init ERROR: " + e.message;
+}
+</script>
+</body>
+</html>
