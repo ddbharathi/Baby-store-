@@ -4,375 +4,247 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-title" content="Catalogue"/>
-<meta name="theme-color" content="#ffffff"/>
-<link rel="manifest" href="manifest.json"/>
-<title>Catalogue · Cloud Sync</title>
+<title>Catalogue · Cloud Sync Fixed</title>
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<!-- SheetJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;overflow-x:hidden}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#111;background:#f5f5f5;min-height:100vh;padding-bottom:30px;position:relative}
-input,select,button{font-family:inherit;font-size:14px}
-input:focus,select:focus{outline:none;border-color:#111!important}
-input::placeholder{color:#ccc}
-
-/* HEADER */
-.hdr{background:#fff;border-bottom:1px solid #e8e8e8;padding:0 14px;display:flex;align-items:center;justify-content:space-between;height:50px;position:sticky;top:0;left:0;right:0;z-index:100;width:100%}
-.logo{font-weight:700;font-size:15px;letter-spacing:-.5px;cursor:pointer;display:flex;align-items:center;gap:4px}
-.logo-edit{font-size:12px;color:#aaa}
-.hdr-right{display:flex;gap:6px;align-items:center}
-
-/* TOP TABS */
-.toptabs{display:flex;background:#efefef;border-radius:10px;padding:3px;margin:12px 14px 0;width:calc(100% - 28px)}
-.toptab{flex:1;padding:8px 0;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;background:transparent;color:#888;transition:all .15s;position:relative}
-.toptab.active{background:#fff;color:#111;box-shadow:0 1px 4px #0001}
-.tbadge{background:#111;color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;margin-left:4px}
-
-/* SEARCH + FILTER */
-.searchbar{display:flex;gap:8px;padding:10px 14px;width:100%;box-sizing:border-box}
-.searchbar input{flex:1;min-width:0;border:1px solid #e0e0e0;border-radius:8px;padding:9px 12px;background:#fff;color:#111;font-size:14px}
-.searchbar select{flex:0 0 110px;min-width:0;border:1px solid #e0e0e0;border-radius:8px;padding:9px 10px;background:#fff;color:#111;max-width:110px}
-
-/* PRODUCT CARDS */
-.cards{padding:0 14px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;width:100%}
-.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px #0001;position:relative}
-.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px}
-.card-name{font-size:16px;font-weight:800;flex:1;word-break:break-word}
-.card-meta{font-size:12px;color:#aaa;margin-bottom:10px}
-.cat-badge{background:#e0faf5;color:#0d9e8a;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;flex-shrink:0;margin-left:8px;white-space:nowrap}
-.bulk-checkbox{position:absolute;top:16px;right:16px;width:22px;height:22px;cursor:pointer;accent-color:#111;z-index:5}
-
-/* PRICE BOXES */
-.price-boxes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
-.pbox{border-radius:12px;padding:10px 4px;text-align:center}
-.pbox-label{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px}
-.pbox-val{font-size:16px;font-weight:800}
-.pbox-buy{background:#eff4ff}.pbox-buy .pbox-label{color:#7a9cf5}.pbox-buy .pbox-val{color:#3b6ef5}
-.pbox-sell{background:#f0faf5}.pbox-sell .pbox-label{color:#6dcfbd}.pbox-sell .pbox-val{color:#0d9e8a}
-.pbox-pkt{background:#f5f0ff}.pbox-pkt .pbox-label{color:#b08af5}.pbox-pkt .pbox-val{color:#7c3aed}
-
-/* CARD ACTIONS */
-.card-actions{display:flex;border-top:1px solid #f5f5f5;padding-top:10px;gap:0}
-.card-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border:none;background:transparent;color:#555;font-weight:600;font-size:13px;cursor:pointer;border-radius:8px}
-.card-btn:active{background:#f5f5f5}
-.card-btn-green{color:#0d9e8a}
-.card-divider{width:1px;background:#f0f0f0}
-
-/* 3-DOT */
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f5f5f5;padding-bottom:30px}
+.hdr{background:#fff;padding:0 14px;display:flex;align-items:center;justify-content:space-between;height:50px;position:sticky;top:0;z-index:100;border-bottom:1px solid #eee}
+.logo{font-weight:700;display:flex;gap:4px;align-items:center;background:none;border:none;font-size:16px;cursor:pointer}
+.logo-edit{font-size:12px;color:#888}
+.hdr-right{display:flex;gap:8px;align-items:center}
+.hdr-btn{border:1px solid #ddd;border-radius:8px;padding:6px 12px;background:white;font-weight:600;cursor:pointer}
+.hdr-add{background:#111;color:white;border:none}
+.dot-header{position:relative}
+.dot-header-btn{background:#f0f0f0;border:none;border-radius:8px;width:34px;height:34px;font-size:20px;cursor:pointer}
+.header-dropdown{position:absolute;top:40px;right:0;background:#fff;border-radius:14px;box-shadow:0 6px 20px #0002;min-width:160px;z-index:200;overflow:hidden}
+.header-dropdown button{width:100%;padding:12px 16px;border:none;background:transparent;text-align:left;font-size:14px;cursor:pointer}
+.header-dropdown button:active{background:#f5f5f5}
+.toptabs{display:flex;background:#efefef;border-radius:12px;margin:12px 14px 0;padding:3px}
+.toptab{flex:1;padding:8px 0;border:none;border-radius:8px;background:transparent;font-weight:700;cursor:pointer}
+.toptab.active{background:#fff;box-shadow:0 1px 3px #0001}
+.tbadge{background:#111;color:#fff;border-radius:12px;padding:1px 7px;font-size:11px;margin-left:6px}
+.searchbar{display:flex;gap:8px;padding:10px 14px}
+.searchbar input{flex:1;border:1px solid #e0e0e0;border-radius:10px;padding:10px;font-size:14px}
+.searchbar select{width:110px;border:1px solid #e0e0e0;border-radius:10px;padding:10px}
+.cards{padding:0 14px;display:flex;flex-direction:column;gap:10px}
+.card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 4px #0001;position:relative}
+.card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.card-name{font-weight:800;font-size:16px}
+.cat-badge{background:#e0faf5;color:#0d9e8a;border-radius:20px;padding:3px 10px;font-size:12px}
+.price-boxes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.pbox{text-align:center;padding:8px;border-radius:12px}
+.pbox-buy{background:#eff4ff}.pbox-buy .pbox-val{color:#3b6ef5}
+.pbox-sell{background:#f0faf5}.pbox-sell .pbox-val{color:#0d9e8a}
+.pbox-pkt{background:#f5f0ff}.pbox-pkt .pbox-val{color:#7c3aed}
+.pbox-label{font-size:10px;font-weight:700;text-transform:uppercase}
+.pbox-val{font-weight:800;font-size:15px}
+.card-actions{display:flex;border-top:1px solid #f0f0f0;margin-top:8px;padding-top:8px}
+.card-btn{flex:1;background:none;border:none;padding:8px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
 .dot-wrap{position:relative}
-.dot-btn{width:30px;height:30px;border-radius:8px;border:none;background:#f5f5f5;color:#555;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
-.dot-menu{position:absolute;top:34px;right:0;background:#fff;border-radius:12px;box-shadow:0 4px 20px #0002;z-index:200;min-width:130px;overflow:hidden}
-.dot-menu button{width:100%;padding:12px 16px;border:none;background:transparent;text-align:left;cursor:pointer;font-size:14px;font-weight:500}
-.dot-menu button:active{background:#f5f5f5}
+.dot-btn{background:#f5f5f5;border:none;width:30px;border-radius:8px;font-size:18px;cursor:pointer}
+.dot-menu{position:absolute;right:0;top:32px;background:white;border-radius:12px;box-shadow:0 4px 12px #0002;z-index:200;min-width:120px}
+.dot-menu button{width:100%;padding:10px 16px;border:none;background:transparent;text-align:left;cursor:pointer}
 .dot-del{color:#e33}
-
-/* BULK DELETE BAR */
-.bulk-bar{display:flex;align-items:center;justify-content:space-between;background:#fff;margin:8px 14px;padding:10px 14px;border-radius:12px;box-shadow:0 1px 6px #0001}
-.bulk-info{font-weight:600;font-size:13px}
+.bulk-bar{background:white;margin:8px 14px;padding:10px 14px;border-radius:12px;display:flex;justify-content:space-between;align-items:center}
+.bulk-info{font-weight:600}
 .bulk-actions{display:flex;gap:12px}
-.bulk-btn{border:none;background:transparent;font-weight:700;font-size:13px;padding:6px 12px;border-radius:20px;cursor:pointer}
+.bulk-btn{border:none;background:#f0f0f0;padding:6px 14px;border-radius:20px;font-weight:600;cursor:pointer}
 .bulk-delete{background:#fee;color:#e33}
-.bulk-cancel{background:#f0f0f0;color:#666}
-
-/* PURCHASE LIST */
-.p-card{background:#fff;border-radius:12px;margin:0 14px 8px;padding:14px;box-shadow:0 1px 4px #0001}
+.p-card{background:#fff;border-radius:14px;margin:0 14px 8px;padding:12px}
 .p-row{display:flex;gap:10px;align-items:center}
-.p-check{width:20px;height:20px;flex-shrink:0;cursor:pointer;accent-color:#111}
-.p-name{font-weight:700;font-size:15px;flex:1}
-.p-sub{font-size:11px;color:#aaa;margin-top:2px}
-.p-done .p-name{text-decoration:line-through;color:#aaa}
-.p-done{opacity:.5}
-.p-price{font-weight:700;font-size:14px;color:#0d9e8a;white-space:nowrap}
-.p-acts{display:flex;gap:6px;align-items:center;flex-shrink:0}
-.p-edit-btn{border:none;background:#f0f0f0;border-radius:6px;color:#555;font-size:12px;font-weight:600;padding:4px 10px;cursor:pointer}
-.p-del-btn{border:none;background:transparent;color:#e33;font-size:18px;cursor:pointer;line-height:1}
-.sec-hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 6px}
-.sec-title{font-size:12px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.4px}
-.clear-btn{border:none;background:transparent;color:#aaa;font-size:12px;font-weight:600;cursor:pointer}
-.add-p-btn{width:calc(100% - 28px);margin:4px 14px 12px;padding:11px;border:1.5px dashed #ddd;border-radius:10px;background:#fff;color:#999;font-weight:600;font-size:13px;cursor:pointer}
-
-/* IMPORT/EXPORT tab */
-.ie-wrap{padding:14px}
-.ie-card{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px #0001}
-.ie-title{font-weight:700;font-size:15px;margin-bottom:4px}
-.ie-sub{font-size:12px;color:#aaa;margin-bottom:12px;line-height:1.6}
-.ie-btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px}
-.ie-green{background:#0d9e8a;color:#fff}
-.ie-gray{background:#f0f0f0;color:#333}
-
-/* SHEET */
+.p-check{width:20px;height:20px}
+.p-name{font-weight:700;flex:1}
+.p-sub{font-size:11px;color:#999}
+.p-price{font-weight:700;color:#0d9e8a}
+.p-acts{display:flex;gap:6px}
+.p-edit-btn,.p-del-btn{background:none;border:none;font-weight:600;cursor:pointer}
+.sec-hdr{display:flex;justify-content:space-between;padding:10px 14px}
+.add-p-btn{width:calc(100% - 28px);margin:4px 14px;padding:12px;border:1.5px dashed #ccc;border-radius:12px;background:white;font-weight:600;cursor:pointer}
 .overlay{position:fixed;inset:0;background:#0005;z-index:300;display:flex;align-items:flex-end}
-.sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 34px;width:100%;max-height:92vh;overflow-y:auto}
-.sheet-handle{width:36px;height:4px;background:#e0e0e0;border-radius:99px;margin:0 auto 16px}
-.sheet-title{font-size:17px;font-weight:800;margin-bottom:16px}
+.sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-height:85vh;overflow-y:auto}
+.sheet-handle{width:40px;height:4px;background:#ddd;border-radius:99px;margin:0 auto 12px}
 .field{margin-bottom:12px}
-.flabel{display:block;font-size:11px;font-weight:700;color:#999;margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase}
-.finput{width:100%;border:1.5px solid #e8e8e8;border-radius:10px;padding:11px 12px;font-size:15px;color:#111;background:#fff}
-.save-btn{width:100%;padding:14px;border:none;border-radius:12px;background:#111;color:#fff;font-size:16px;font-weight:700;cursor:pointer;margin-top:6px}
-.cancel-btn{width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:12px;background:#fff;color:#666;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px}
-
-/* BUTTONS */
-.hdr-btn{cursor:pointer;border:1px solid #e0e0e0;border-radius:7px;font-weight:600;font-size:12px;padding:7px 12px;background:transparent;color:#666}
-.hdr-add{background:#111;color:#fff;border:none}
-.bulk-mode-btn{background:#111;color:#fff;border:none}
-
-/* CAT MANAGE */
-.cat-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5}
-.cat-del{border:none;background:transparent;color:#e33;font-size:18px;cursor:pointer}
-.cat-add-row{display:flex;gap:8px;margin-top:12px}
-.cat-add-row input{flex:1;border:1.5px solid #e8e8e8;border-radius:10px;padding:10px 12px;font-size:14px}
-.cat-add-btn{padding:10px 16px;border:none;border-radius:10px;background:#111;color:#fff;font-weight:700;cursor:pointer}
-
-/* TOAST */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 4px 16px #0003;display:none;pointer-events:none}
-.tok{background:#111;color:#fff}
-.terr{background:#e33;color:#fff}
-
-.empty{text-align:center;padding:48px 20px;color:#ccc;font-size:14px}
+.flabel{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:4px;display:block}
+.finput{width:100%;border:1.5px solid #e8e8e8;border-radius:10px;padding:11px 12px;font-size:15px}
+.save-btn{width:100%;padding:14px;background:#111;color:#fff;border:none;border-radius:12px;font-weight:700;margin-top:10px;cursor:pointer}
+.cancel-btn{width:100%;padding:12px;border:1.5px solid #ddd;background:white;border-radius:12px;margin-top:8px;cursor:pointer}
+.empty{text-align:center;padding:48px 20px;color:#aaa}
 .cat-picker{position:relative}
-.cat-picker-input{width:100%;border:1.5px solid #e8e8e8;border-radius:10px;padding:11px 38px 11px 12px;font-size:15px;color:#111;background:#fff;font-family:inherit}
-.cat-picker-input:focus{outline:none;border-color:#111}
-.cat-picker-input::placeholder{color:#ccc}
-.cat-picker-arrow{position:absolute;right:12px;top:14px;color:#aaa;font-size:16px;cursor:pointer}
-.cat-dropdown{background:#fff;border:1.5px solid #e8e8e8;border-radius:10px;margin-top:4px;overflow:hidden;box-shadow:0 4px 16px #0002}
-.cat-opt{padding:12px 14px;font-size:15px;cursor:pointer;border-bottom:1px solid #f5f5f5;color:#111}
-.cat-opt:last-child{border-bottom:none}
-.cat-opt:active{background:#f5f5f5}
+.cat-picker-input{width:100%;border:1.5px solid #e8e8e8;border-radius:10px;padding:11px 38px 11px 12px}
+.cat-picker-arrow{position:absolute;right:12px;top:14px;font-size:16px;cursor:pointer}
+.cat-dropdown{background:#fff;border:1px solid #e0e0e0;border-radius:10px;margin-top:4px;max-height:200px;overflow-y:auto}
+.cat-opt{padding:10px 12px;cursor:pointer}
 .cat-opt.selected{color:#0d9e8a;font-weight:700}
-.sync-badge{background:#0d9e8a20;border-radius:12px;padding:4px 8px;font-size:11px;color:#0d9e8a;font-weight:500}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:8px 18px;border-radius:30px;font-size:13px;font-weight:600;display:none;z-index:999;white-space:nowrap}
+.sync-badge{background:#0d9e8a20;border-radius:20px;padding:4px 8px;font-size:11px;color:#0d9e8a}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <div id="toast" class="toast"></div>
 <script>
-// ----------------------------- FIREBASE CONFIGURATION ---------------------------------
+// Firebase configuration (your project)
 const firebaseConfig = {
   apiKey: "AIzaSyC2AarE6wb92i14kE2Lly3I5PeYOKq_em8",
   authDomain: "baby-store-a1b39.firebaseapp.com",
-  databaseURL: "https://baby-store-a1b39-default-rtdb.firebaseio.com",
   projectId: "baby-store-a1b39",
   storageBucket: "baby-store-a1b39.firebasestorage.app",
   messagingSenderId: "452754922308",
-  appId: "1:452754922308:web:6dc7ff7f8294e7b21cd511",
-  measurementId: "G-5LY601QKJ3"
+  appId: "1:452754922308:web:6dc7ff7f8294e7b21cd511"
 };
-// -------------------------------------------------------------------------------------
 
-// Global state
+// ---------- Global state ----------
 let products = [];
 let categories = [];
 let purchases = [];
 let catalogueName = "Catalogue";
-let npid = 1;
-let nppid = 1;
+let npid = 1, nppid = 1;
 let tab = "catalogue";
 let filterCat = "All";
-let openMenu = null;
-let sheet = null;
-let editId = null;
-let editPId = null;
-let newCat = "";
-let pf = blankP();
-let ppf = blankPP();
+let openMenu = null, sheet = null, editId = null, editPId = null, newCat = "";
+let pf = {name:"",unit:"per packet",category:"",buyPrice:"",sellPrice:"",packetPrice:"",godown:"",note:""};
+let ppf = {name:"",qty:"1",buyPrice:"",note:""};
 let searchVal = "";
-
-// Bulk delete
 let bulkMode = false;
 let selectedProducts = new Set();
+let firestoreEnabled = false, db = null, docRef = null, unsub = null, updating = false;
+let headerDropdown = false;
 
-// Firebase sync state
-let firestoreEnabled = false;
-let db = null;
-let docRef = null;
-let unsubFirestore = null;
-let updatingFromFirestore = false;
-let pendingWrite = null;
-
+// helpers
 function blankP(){ return {name:"",unit:"per packet",category:"",buyPrice:"",sellPrice:"",packetPrice:"",godown:"",note:""}; }
 function blankPP(){ return {name:"",qty:"1",buyPrice:"",note:""}; }
-
-let tt;
-function toast(msg,err){ const e=document.getElementById("toast"); e.className="toast "+(err?"terr":"tok"); e.textContent=msg; e.style.display="block"; clearTimeout(tt); tt=setTimeout(()=>e.style.display="none",2400); }
-function inr(n){ if(n===""||n===null||n===undefined) return "—"; return "₹"+Number(n).toFixed(2); }
+function toast(msg,err){ const e=document.getElementById("toast"); e.className="toast"; e.style.background=err?"#e33":"#111"; e.textContent=msg; e.style.display="block"; setTimeout(()=>e.style.display="none",2500); }
+function inr(v){ return (v===""||v==null)?"—":"₹"+Number(v).toFixed(2); }
 function pendingCount(){ return purchases.filter(p=>!p.done).length; }
 
-// ---------- LocalStorage ----------
+// ---------- Persistence (Local + Firestore) ----------
 function persistToLocal(){
-  try {
-    localStorage.setItem("cat_products", JSON.stringify(products));
-    localStorage.setItem("cat_cats", JSON.stringify(categories));
-    localStorage.setItem("cat_purchases", JSON.stringify(purchases));
-    localStorage.setItem("cat_npid", npid);
-    localStorage.setItem("cat_nppid", nppid);
-    localStorage.setItem("cat_name", catalogueName);
-  } catch(e){}
+  localStorage.setItem("cat_products",JSON.stringify(products));
+  localStorage.setItem("cat_cats",JSON.stringify(categories));
+  localStorage.setItem("cat_purchases",JSON.stringify(purchases));
+  localStorage.setItem("cat_npid",npid);
+  localStorage.setItem("cat_nppid",nppid);
+  localStorage.setItem("cat_name",catalogueName);
 }
-
 async function syncToFirestore(){
-  if(!firestoreEnabled || !docRef || updatingFromFirestore) return;
-  try {
-    const data = { products, categories, purchases, catalogueName, npid, nppid, lastUpdated: new Date().toISOString() };
-    await docRef.set(data);
-  } catch(e){ console.warn("Firestore sync error", e); toast("Sync pending - check network", true); }
+  if(!firestoreEnabled || !docRef || updating) return;
+  try{ await docRef.set({products,categories,purchases,catalogueName,npid,nppid,updated:Date.now()}); }
+  catch(e){ console.warn(e); }
 }
-
-function persist(){
-  persistToLocal();
-  syncToFirestore();
-}
-
+function persist(){ persistToLocal(); syncToFirestore(); }
 function loadFromLocal(){
-  products = JSON.parse(localStorage.getItem("cat_products") || JSON.stringify([
-    {id:1,name:"100ml Itc",unit:"per packet",category:"Paper Cup",buyPrice:22,sellPrice:25,packetPrice:25,godown:"",note:""},
-    {id:2,name:"10x12",unit:"per bag",category:"Plastic Bag",buyPrice:15,sellPrice:20,packetPrice:20,godown:"",note:""}
-  ]));
+  products = JSON.parse(localStorage.getItem("cat_products") || JSON.stringify([{id:1,name:"100ml Itc",unit:"per packet",category:"Paper Cup",buyPrice:22,sellPrice:25,packetPrice:25,godown:"",note:""},{id:2,name:"10x12",unit:"per bag",category:"Plastic Bag",buyPrice:15,sellPrice:20,packetPrice:20,godown:"",note:""}]));
   categories = JSON.parse(localStorage.getItem("cat_cats") || JSON.stringify(["Paper Cup","Plastic Bag","Thermocol Plate","Aluminum Foil"]));
   purchases = JSON.parse(localStorage.getItem("cat_purchases") || "[]");
-  npid = Number(localStorage.getItem("cat_npid") || 3);
-  nppid = Number(localStorage.getItem("cat_nppid") || 1);
-  catalogueName = localStorage.getItem("cat_name") || "Catalogue";
+  npid = Number(localStorage.getItem("cat_npid")||3);
+  nppid = Number(localStorage.getItem("cat_nppid")||1);
+  catalogueName = localStorage.getItem("cat_name")||"Catalogue";
 }
 
-// ---------- Enhanced Firebase with offline persistence ----------
-async function initFirebase() {
-  if(!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
-    console.warn("Firebase not configured");
-    loadFromLocal();
-    firestoreEnabled = false;
-    render();
-    return;
-  }
-  try {
+// ---------- Firebase init with offline persistence ----------
+async function initFirebase(){
+  if(!firebaseConfig.apiKey) { loadFromLocal(); firestoreEnabled=false; render(); return; }
+  try{
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
-    // Enable offline persistence for better mobile sync
-    await db.enablePersistence({ synchronizeTabs: true }).catch(err => {
-      if (err.code === 'failed-precondition') console.warn("multiple tabs open, persistence limited");
-      else console.warn(err);
-    });
+    await db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
     await firebase.auth().signInAnonymously();
     docRef = db.collection("catalogues").doc("main_catalogue");
-    
-    // First load: either from Firestore or local + upload
-    const docSnap = await docRef.get();
-    if(docSnap.exists){
-      const data = docSnap.data();
-      updatingFromFirestore = true;
-      products = data.products || [];
-      categories = data.categories || [];
-      purchases = data.purchases || [];
-      catalogueName = data.catalogueName || "Catalogue";
-      npid = data.npid || 1;
-      nppid = data.nppid || 1;
-      updatingFromFirestore = false;
+    const snap = await docRef.get();
+    if(snap.exists){
+      const d=snap.data();
+      updating=true;
+      products=d.products||[]; categories=d.categories||[]; purchases=d.purchases||[];
+      catalogueName=d.catalogueName||"Catalogue"; npid=d.npid||1; nppid=d.nppid||1;
+      updating=false;
       persistToLocal();
-    } else {
-      loadFromLocal();
-      await docRef.set({ products, categories, purchases, catalogueName, npid, nppid, lastUpdated: new Date().toISOString() });
-    }
-    firestoreEnabled = true;
+    } else { loadFromLocal(); await docRef.set({products,categories,purchases,catalogueName,npid,nppid}); }
+    firestoreEnabled=true;
     render();
-    // Real-time listener
-    unsubFirestore = docRef.onSnapshot((snap) => {
-      if(!snap.exists || updatingFromFirestore) return;
-      const data = snap.data();
-      updatingFromFirestore = true;
-      products = data.products || [];
-      categories = data.categories || [];
-      purchases = data.purchases || [];
-      catalogueName = data.catalogueName || "Catalogue";
-      npid = data.npid || 1;
-      nppid = data.nppid || 1;
-      updatingFromFirestore = false;
+    unsub = docRef.onSnapshot(s=>{
+      if(!s.exists || updating) return;
+      const d=s.data();
+      updating=true;
+      products=d.products||[]; categories=d.categories||[]; purchases=d.purchases||[];
+      catalogueName=d.catalogueName||"Catalogue"; npid=d.npid||1; nppid=d.nppid||1;
+      updating=false;
       persistToLocal();
-      render();  // auto-refresh UI with cloud changes
-      toast("🔄 Synced from cloud", false);
-    }, (err) => { console.warn("Listener error", err); toast("Sync error - will retry", true); });
-  } catch(e){
-    console.error("Firebase init failed", e);
-    loadFromLocal();
-    firestoreEnabled = false;
-    render();
-  }
+      render();
+      toast("🔄 Synced from cloud");
+    });
+  }catch(e){ loadFromLocal(); firestoreEnabled=false; render(); toast("Firebase failed, local only",true); }
 }
 
-// ---- Business Logic (all operations call persist) ----
+// ---------- CRUD Operations (all call persist) ----------
 function saveProduct(){
-  if(!pf.name.trim()){ toast("Enter product name",true); return; }
-  const e = {...pf, buyPrice: pf.buyPrice!==""?+pf.buyPrice:"", sellPrice: pf.sellPrice!==""?+pf.sellPrice:"", packetPrice: pf.packetPrice!==""?+pf.packetPrice:""};
-  if(editId!=null){ products = products.map(p=>p.id===editId?{...e,id:editId}:p); toast("Updated"); }
-  else{ products = [...products, {...e, id:npid}]; npid++; toast("Product added"); }
-  pf = blankP(); editId=null; sheet=null; persist(); render();
+  if(!pf.name.trim()){ toast("Product name required",true); return; }
+  const e={...pf,buyPrice:pf.buyPrice!==""?+pf.buyPrice:"",sellPrice:pf.sellPrice!==""?+pf.sellPrice:"",packetPrice:pf.packetPrice!==""?+pf.packetPrice:""};
+  if(editId!=null){ products=products.map(p=>p.id===editId?{...e,id:editId}:p); toast("Updated"); }
+  else{ products=[...products,{...e,id:npid}]; npid++; toast("Product added"); }
+  pf=blankP(); editId=null; sheet=null; persist(); render();
 }
-function delProduct(id){ 
-  products = products.filter(p=>p.id!==id); 
-  purchases = purchases.filter(p=>p.productId!==id); 
-  if(selectedProducts.has(id)) selectedProducts.delete(id);
-  openMenu=null; persist(); render(); toast("Deleted"); 
+function delProduct(id){
+  products=products.filter(p=>p.id!==id);
+  purchases=purchases.filter(p=>p.productId!==id);
+  selectedProducts.delete(id);
+  openMenu=null; persist(); render(); toast("Deleted");
+}
+function openEdit(p){ pf={...p,buyPrice:typeof p.buyPrice==='string'?p.buyPrice:String(p.buyPrice),sellPrice:typeof p.sellPrice==='string'?p.sellPrice:String(p.sellPrice),packetPrice:typeof p.packetPrice==='string'?p.packetPrice:String(p.packetPrice)}; editId=p.id; sheet="product"; openMenu=null; render(); }
+function addToPurchase(p){
+  if(purchases.find(x=>x.productId===p.id && !x.done)){ toast("Already in list",true); return; }
+  purchases=[...purchases,{id:nppid,productId:p.id,name:p.name,qty:"1",buyPrice:String(p.buyPrice||""),note:"",done:false}];
+  nppid++; persist(); toast("Added to purchase"); render();
+}
+function savePurchase(){
+  if(!ppf.name.trim()){ toast("Name required",true); return; }
+  if(editPId!=null){ purchases=purchases.map(p=>p.id===editPId?{...ppf,id:editPId,done:p.done}:p); toast("Updated"); }
+  else{ purchases=[...purchases,{...ppf,id:nppid,done:false}]; nppid++; toast("Added"); }
+  ppf=blankPP(); editPId=null; sheet=null; persist(); render();
+}
+function toggleP(id){ purchases=purchases.map(p=>p.id===id?{...p,done:!p.done}:p); persist(); render(); }
+function delP(id){ purchases=purchases.filter(p=>p.id!==id); persist(); render(); toast("Removed"); }
+function clearDone(){ purchases=purchases.filter(p=>!p.done); persist(); render(); }
+function addCat(){ const c=newCat.trim(); if(!c)return; if(categories.includes(c)){ toast("Exists",true); return; } categories=[...categories,c]; newCat=""; persist(); render(); }
+function delCat(c){ categories=categories.filter(x=>x!==c); persist(); render(); }
+function saveCatalogueName(name){ if(!name.trim())return; catalogueName=name.trim(); persist(); sheet=null; render(); toast("Renamed"); }
+
+// Bulk mode
+function enterBulkMode(){ bulkMode=true; selectedProducts.clear(); render(); }
+function cancelBulkMode(){ bulkMode=false; selectedProducts.clear(); render(); }
+function toggleSelectProduct(id){ if(selectedProducts.has(id)) selectedProducts.delete(id); else selectedProducts.add(id); renderCards(); }
+function selectAllVisible(){
+  let filtered = products.filter(p=> (filterCat==="All"||p.category===filterCat) && p.name.toLowerCase().includes(searchVal.toLowerCase()));
+  filtered.forEach(p=>selectedProducts.add(p.id));
+  renderCards();
 }
 function bulkDeleteSelected(){
-  if(selectedProducts.size===0){ toast("No products selected",true); return; }
+  if(selectedProducts.size===0){ toast("No selection",true); return; }
   if(confirm(`Delete ${selectedProducts.size} product(s)?`)){
     products = products.filter(p=>!selectedProducts.has(p.id));
     purchases = purchases.filter(p=>!selectedProducts.has(p.productId));
     selectedProducts.clear();
-    bulkMode = false;
-    persist();
-    render();
-    toast("Deleted selected items");
+    bulkMode=false;
+    persist(); render();
+    toast("Deleted");
   }
 }
-function cancelBulkMode(){ bulkMode=false; selectedProducts.clear(); render(); }
-function toggleSelectProduct(id){
-  if(selectedProducts.has(id)) selectedProducts.delete(id);
-  else selectedProducts.add(id);
-  renderCards();
-}
-function selectAllVisible(){
-  let filtered = products.filter(p => (filterCat==="All"||p.category===filterCat) && p.name.toLowerCase().includes(searchVal.toLowerCase()));
-  filtered.forEach(p=>selectedProducts.add(p.id));
-  renderCards();
-}
-function openEdit(p){ pf={...p, buyPrice:p.buyPrice!==""?String(p.buyPrice):"", sellPrice:p.sellPrice!==""?String(p.sellPrice):"", packetPrice:p.packetPrice!==""?String(p.packetPrice):""}; editId=p.id; sheet="product"; openMenu=null; render(); }
-function addToPurchase(p){
-  if(purchases.find(x=>x.productId===p.id && !x.done)){ toast("Already in purchase list",true); return; }
-  purchases = [...purchases, {id:nppid, productId:p.id, name:p.name, qty:"1", buyPrice:String(p.buyPrice||""), note:"", done:false}];
-  nppid++; persist(); toast("Added to purchase list"); render();
-}
-function savePurchase(){
-  if(!ppf.name.trim()){ toast("Enter product name",true); return; }
-  if(editPId!=null){ purchases = purchases.map(p=>p.id===editPId?{...ppf, id:editPId, done:p.done}:p); toast("Updated"); }
-  else { purchases = [...purchases, {...ppf, id:nppid, done:false}]; nppid++; toast("Added"); }
-  ppf = blankPP(); editPId=null; sheet=null; persist(); render();
-}
-function toggleP(id){ purchases = purchases.map(p=>p.id===id?{...p, done:!p.done}:p); persist(); render(); }
-function delP(id){ purchases = purchases.filter(p=>p.id!==id); persist(); render(); toast("Removed"); }
-function clearDone(){ purchases = purchases.filter(p=>!p.done); persist(); render(); }
-function addCat(){ const c=newCat.trim(); if(!c){ toast("Enter name",true); return; } if(categories.includes(c)){ toast("Already exists",true); return; } categories=[...categories,c]; newCat=""; persist(); render(); }
-function delCat(c){ categories=categories.filter(x=>x!==c); persist(); render(); }
-function saveCatalogueName(name){ if(!name.trim()){ toast("Enter a name",true); return; } catalogueName = name.trim(); persist(); sheet=null; render(); toast("Name saved"); }
 
-// Export
+// Export / Import
 function exportXL(){
-  const wb = XLSX.utils.book_new();
-  const catData = [{"__catalogue_name__": catalogueName, "Product Name":"","Unit":"","Category":"","Buy Price (₹)":"","Sell Price (₹)":"","Packet Price (₹)":"","Godown":"","Note":""}];
-  const productRows = products.map(p=>({"__catalogue_name__":"","Product Name":p.name,"Unit":p.unit,"Category":p.category,"Buy Price (₹)":p.buyPrice,"Sell Price (₹)":p.sellPrice,"Packet Price (₹)":p.packetPrice,"Godown":p.godown,"Note":p.note}));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([...catData, ...productRows]), "Catalogue");
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(purchases.map(p=>({"Product":p.name,"Qty":p.qty,"Buy Price (₹)":p.buyPrice,"Note":p.note,"Status":p.done?"Done":"Pending"}))), "Purchase List");
-  XLSX.writeFile(wb, (catalogueName||"Catalogue")+".xlsx");
+  const wb=XLSX.utils.book_new();
+  const catRow=[{"__catalogue_name__":catalogueName,"Product Name":"","Unit":"","Category":"","Buy Price (₹)":"","Sell Price (₹)":"","Packet Price (₹)":"","Godown":"","Note":""}];
+  const productRows=products.map(p=>({"__catalogue_name__":"","Product Name":p.name,"Unit":p.unit,"Category":p.category,"Buy Price (₹)":p.buyPrice,"Sell Price (₹)":p.sellPrice,"Packet Price (₹)":p.packetPrice,"Godown":p.godown,"Note":p.note}));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([...catRow,...productRows]),"Catalogue");
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(purchases.map(p=>({"Product":p.name,"Qty":p.qty,"Buy Price (₹)":p.buyPrice,"Note":p.note,"Status":p.done?"Done":"Pending"}))),"Purchase");
+  XLSX.writeFile(wb,(catalogueName||"Catalogue")+".xlsx");
   toast("Exported");
 }
-
-// Import with duplicate prevention & automatic sync to cloud
+function triggerImport(){ document.getElementById("importFileInput")?.click(); }
 function importXL(e){
   const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
@@ -381,139 +253,198 @@ function importXL(e){
       const wb=XLSX.read(ev.target.result,{type:"binary"});
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws);
-      if(rows.length && rows[0]["__catalogue_name__"]){ 
-        const importedName = rows[0]["__catalogue_name__"]; 
-        if(importedName) catalogueName = importedName; 
-      }
+      if(rows.length && rows[0]["__catalogue_name__"]) catalogueName=rows[0]["__catalogue_name__"]||catalogueName;
       let id=npid;
-      const existingNames = new Set(products.map(p=>p.name.trim().toLowerCase()));
-      let importedCount=0, skippedCount=0;
-      const mapped=[];
+      const existingNames=new Set(products.map(p=>p.name.trim().toLowerCase()));
+      let imported=0, skipped=0, newCats=new Set();
+      const newProds=[];
       for(let r of rows.filter(r=>r["Product Name"])){
-        const prodName = r["Product Name"]?.trim();
-        if(!prodName) continue;
-        if(existingNames.has(prodName.toLowerCase())){ skippedCount++; continue; }
-        mapped.push({ 
-          id:id++, name:prodName, unit:r["Unit"]||"per packet", category:r["Category"]||"", 
-          buyPrice:r["Buy Price (₹)"]!==undefined?+r["Buy Price (₹)"]:"", 
-          sellPrice:r["Sell Price (₹)"]!==undefined?+r["Sell Price (₹)"]:"", 
-          packetPrice:r["Packet Price (₹)"]!==undefined?+r["Packet Price (₹)"]:"", 
-          godown:r["Godown"]||"", note:r["Note"]||"" 
-        });
-        existingNames.add(prodName.toLowerCase());
-        importedCount++;
+        let name=r["Product Name"]?.trim(); if(!name) continue;
+        if(existingNames.has(name.toLowerCase())){ skipped++; continue; }
+        const cat=r["Category"]?.trim()||"";
+        if(cat && !categories.includes(cat)) newCats.add(cat);
+        newProds.push({id:id++, name, unit:r["Unit"]||"per packet", category:cat, buyPrice:r["Buy Price (₹)"]!==undefined?+r["Buy Price (₹)"]:"", sellPrice:r["Sell Price (₹)"]!==undefined?+r["Sell Price (₹)"]:"", packetPrice:r["Packet Price (₹)"]!==undefined?+r["Packet Price (₹)"]:"", godown:r["Godown"]||"", note:r["Note"]||""});
+        imported++;
       }
-      // merge categories
-      const newCatsSet = new Set();
-      mapped.forEach(prod => { if(prod.category && prod.category.trim()) newCatsSet.add(prod.category.trim()); });
-      let addedCat=0;
-      for(let cat of newCatsSet) if(!categories.includes(cat)){ categories.push(cat); addedCat++; }
-      products=[...products,...mapped]; npid=id; persist();
-      let msg = `Imported ${importedCount} products.`;
-      if(skippedCount) msg += ` Skipped ${skippedCount} duplicate(s).`;
-      if(addedCat) msg += ` Added ${addedCat} new categor${addedCat===1?'y':'ies'}.`;
-      toast(msg);
+      if(newCats.size) categories=[...categories,...newCats];
+      products=[...products,...newProds];
+      npid=id;
+      persist();
+      toast(`Imported ${imported} products (${skipped} duplicates). ${newCats.size} new categor${newCats.size===1?'y':'ies'}.`);
       render();
-    } catch(imErr){ toast("Import failed",true); }
+    }catch(err){ toast("Import failed",true); }
   };
-  r.readAsBinaryString(f); e.target.value="";
+  r.readAsBinaryString(f);
+  e.target.value="";
 }
 
-// ---------- DOM ----------
-function el(tag,cls,txt){ const e=document.createElement(tag); if(cls)e.className=cls; if(txt!==undefined)e.textContent=txt; return e; }
+// ---------- DOM rendering ----------
+function el(t,c,txt){ let e=document.createElement(t); if(c)e.className=c; if(txt)e.textContent=txt; return e; }
 function on(e,ev,fn){ e.addEventListener(ev,fn); return e; }
-function inp(val,ph,onchange,type){ const e=el("input","finput"); e.type=type||"text"; e.placeholder=ph||""; e.value=val||""; e.addEventListener("input",onchange); return e; }
-function selEl(opts,val,onchange){ const e=el("select","finput"); opts.forEach(o=>{const op=document.createElement("option"); op.value=o.v||o; op.textContent=o.l||o; if((o.v||o)===val)op.selected=true; e.appendChild(op);}); e.addEventListener("change",onchange); return e; }
-function field(label,child,cls){ const w=el("div","field"+(cls?" "+cls:"")); w.appendChild(el("span","flabel",label)); w.appendChild(child); return w; }
-
+function inp(val,ph,onChange,type){ let i=el("input","finput"); i.type=type||"text"; i.placeholder=ph||""; i.value=val||""; i.addEventListener("input",onChange); return i; }
+function sel(opts,val,onChange){ let s=el("select","finput"); opts.forEach(o=>{let opt=document.createElement("option"); opt.value=o.v||o; opt.textContent=o.l||o; if((o.v||o)===val)opt.selected=true; s.appendChild(opt);}); s.addEventListener("change",onChange); return s; }
+function field(lbl,child){ let w=el("div","field"); w.appendChild(el("span","flabel",lbl)); w.appendChild(child); return w; }
+function categoryPicker(val,onChange){
+  let wrap=el("div","cat-picker");
+  let input=el("input","cat-picker-input"); input.placeholder="Select or type"; input.value=val;
+  let arrow=el("div","cat-picker-arrow","⌵");
+  let dropdown=null;
+  let close=()=>{ if(dropdown) dropdown.remove(); dropdown=null; };
+  let show=()=>{ close(); dropdown=el("div","cat-dropdown"); categories.forEach(c=>{ let opt=el("div","cat-opt",c); if(c===val)opt.classList.add("selected"); opt.addEventListener("click",()=>{ input.value=c; onChange(c); close(); }); dropdown.appendChild(opt); }); let addOpt=el("div","cat-opt","+ Add new..."); addOpt.style.color="#0d9e8a"; addOpt.addEventListener("click",()=>{ sheet="categoryManager"; render(); }); dropdown.appendChild(addOpt); wrap.appendChild(dropdown); };
+  input.addEventListener("focus",show);
+  arrow.addEventListener("click",show);
+  document.addEventListener("click",function(e){ if(!wrap.contains(e.target)) close(); });
+  wrap.appendChild(input); wrap.appendChild(arrow);
+  return wrap;
+}
 function renderCards(){
-  const wrap = document.getElementById("cards-wrap");
+  let wrap=document.getElementById("cards-wrap");
   if(!wrap) return;
-  let filtered = products.filter(p => (filterCat==="All"||p.category===filterCat) && p.name.toLowerCase().includes(searchVal.toLowerCase()));
-  if(filtered.length===0){ wrap.innerHTML = `<div class="empty">✨ No products found</div>`; return; }
-  const cardsDiv = el("div","cards");
-  filtered.forEach(p => {
-    const card = el("div","card");
+  let filtered=products.filter(p=>(filterCat==="All"||p.category===filterCat) && p.name.toLowerCase().includes(searchVal.toLowerCase()));
+  if(filtered.length===0){ wrap.innerHTML="<div class='empty'>✨ No products</div>"; return; }
+  let cardsDiv=el("div","cards");
+  filtered.forEach(p=>{
+    let card=el("div","card");
     if(bulkMode){
-      const chk = el("input","bulk-checkbox"); chk.type="checkbox"; chk.checked=selectedProducts.has(p.id);
+      let chk=el("input","bulk-checkbox"); chk.type="checkbox"; chk.checked=selectedProducts.has(p.id);
+      chk.style.position="absolute"; chk.style.top="14px"; chk.style.right="14px"; chk.style.width="22px"; chk.style.height="22px";
       chk.addEventListener("change",()=>toggleSelectProduct(p.id));
       card.appendChild(chk);
     }
-    const topDiv = el("div","card-top");
-    const nameSpan = el("span","card-name", p.name);
-    const catSpan = el("span","cat-badge", p.category || "Uncategorized");
-    topDiv.appendChild(nameSpan); topDiv.appendChild(catSpan);
-    const metaDiv = el("div","card-meta", p.unit || "");
-    const priceBoxes = el("div","price-boxes");
-    priceBoxes.innerHTML = `<div class="pbox pbox-buy"><div class="pbox-label">BUY</div><div class="pbox-val">${inr(p.buyPrice)}</div></div>
-                            <div class="pbox pbox-sell"><div class="pbox-label">SELL</div><div class="pbox-val">${inr(p.sellPrice)}</div></div>
-                            <div class="pbox pbox-pkt"><div class="pbox-label">PACKET</div><div class="pbox-val">${inr(p.packetPrice)}</div></div>`;
-    const actions = el("div","card-actions");
-    const editBtn = el("button","card-btn","✏️ Edit"); editBtn.addEventListener("click",()=>openEdit(p));
-    const divider = el("div","card-divider");
-    const buyBtn = el("button","card-btn card-btn-green","🛒 Buy"); buyBtn.addEventListener("click",()=>addToPurchase(p));
-    const dotWrap = el("div","dot-wrap");
-    const dotBtn = el("button","dot-btn","⋯"); dotBtn.addEventListener("click",(e)=>{ e.stopPropagation(); if(openMenu===p.id) openMenu=null; else openMenu=p.id; render(); });
+    let top=el("div","card-top");
+    top.appendChild(el("span","card-name",p.name));
+    top.appendChild(el("span","cat-badge",p.category||"Uncategorized"));
+    let meta=el("div","card-meta",p.unit);
+    meta.style.fontSize="12px"; meta.style.color="#aaa"; meta.style.marginBottom="8px";
+    let prices=el("div","price-boxes");
+    prices.innerHTML=`<div class="pbox pbox-buy"><div class="pbox-label">BUY</div><div class="pbox-val">${inr(p.buyPrice)}</div></div>
+                      <div class="pbox pbox-sell"><div class="pbox-label">SELL</div><div class="pbox-val">${inr(p.sellPrice)}</div></div>
+                      <div class="pbox pbox-pkt"><div class="pbox-label">PACKET</div><div class="pbox-val">${inr(p.packetPrice)}</div></div>`;
+    let actions=el("div","card-actions");
+    let editBtn=el("button","card-btn","✏️ Edit"); editBtn.addEventListener("click",()=>openEdit(p));
+    let divider=el("div","card-divider"); divider.style.width="1px"; divider.style.background="#f0f0f0";
+    let buyBtn=el("button","card-btn card-btn-green","🛒 Buy"); buyBtn.style.color="#0d9e8a"; buyBtn.addEventListener("click",()=>addToPurchase(p));
+    let dotWrap=el("div","dot-wrap");
+    let dotBtn=el("button","dot-btn","⋯"); dotBtn.addEventListener("click",(e)=>{ e.stopPropagation(); if(openMenu===p.id) openMenu=null; else openMenu=p.id; render(); });
     dotWrap.appendChild(dotBtn);
     if(openMenu===p.id){
-      const menu = el("div","dot-menu");
-      const delAct = el("button","dot-del","🗑 Delete"); delAct.addEventListener("click",()=>{ delProduct(p.id); openMenu=null; });
-      menu.appendChild(delAct);
+      let menu=el("div","dot-menu");
+      let delBtn=el("button","dot-del","🗑 Delete"); delBtn.addEventListener("click",()=>{ delProduct(p.id); openMenu=null; });
+      menu.appendChild(delBtn);
       dotWrap.appendChild(menu);
     }
-    actions.append(editBtn, divider, buyBtn, dotWrap);
-    card.append(topDiv, metaDiv, priceBoxes, actions);
+    actions.append(editBtn,divider,buyBtn,dotWrap);
+    card.append(top,meta,prices,actions);
     cardsDiv.appendChild(card);
   });
-  wrap.innerHTML = ""; wrap.appendChild(cardsDiv);
+  wrap.innerHTML=""; wrap.appendChild(cardsDiv);
 }
-
-// Main render (kept compact, unchanged logic except for bulk bar)
-function render(){ /* full render similar to previous but with bulk bar */ 
+function renderBulkBar(){
+  let existing=document.getElementById("bulkBar");
+  if(existing) existing.remove();
+  if(!bulkMode) return;
+  let bar=el("div","bulk-bar"); bar.id="bulkBar";
+  bar.innerHTML=`<div class="bulk-info">${selectedProducts.size} selected</div>
+                 <div class="bulk-actions">
+                   <button class="bulk-btn" id="selectAllBtn">Select all</button>
+                   <button class="bulk-btn bulk-delete" id="bulkDeleteBtn">Delete</button>
+                   <button class="bulk-btn bulk-cancel" id="bulkCancelBtn">Cancel</button>
+                 </div>`;
+  document.getElementById("app").appendChild(bar);
+  document.getElementById("selectAllBtn")?.addEventListener("click",selectAllVisible);
+  document.getElementById("bulkDeleteBtn")?.addEventListener("click",bulkDeleteSelected);
+  document.getElementById("bulkCancelBtn")?.addEventListener("click",cancelBulkMode);
+}
+function render(){
   const app=document.getElementById("app"); app.innerHTML="";
+  // header
   const hdr=el("div","hdr");
-  const logoBtn=el("button","logo"); logoBtn.style.cssText="background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:4px"; logoBtn.appendChild(document.createTextNode(catalogueName)); logoBtn.appendChild(el("span","logo-edit","✏️")); logoBtn.addEventListener("click",()=>{ sheet="rename"; render(); }); hdr.appendChild(logoBtn);
-  const hr=el("div","hdr-right");
-  const fi=el("input",""); fi.type="file"; fi.accept=".xlsx,.xls"; fi.style.display="none"; fi.addEventListener("change",importXL);
-  hr.appendChild(fi); hr.appendChild(on(el("button","hdr-btn","↓"),"click",()=>fi.click())); hr.appendChild(on(el("button","hdr-btn","↑"),"click",exportXL)); hr.appendChild(on(el("button","hdr-btn hdr-add","+ Add"),"click",()=>{ if(tab==="purchase"){ ppf=blankPP(); editPId=null; sheet="purchase"; }else{ pf=blankP(); editId=null; sheet="product"; } render(); }));
-  if(firestoreEnabled) hr.appendChild(el("span","sync-badge","☁️ cloud"));
-  hdr.appendChild(hr); app.appendChild(hdr);
+  const logoBtn=el("button","logo"); logoBtn.innerHTML=`${catalogueName}<span class="logo-edit">✏️</span>`;
+  logoBtn.addEventListener("click",()=>{ sheet="rename"; render(); });
+  hdr.appendChild(logoBtn);
+  const right=el("div","hdr-right");
+  const addBtn=el("button","hdr-btn hdr-add","+ Add");
+  addBtn.addEventListener("click",()=>{ if(tab==="purchase"){ ppf=blankPP(); editPId=null; sheet="purchase"; } else{ pf=blankP(); editId=null; sheet="product"; } render(); });
+  right.appendChild(addBtn);
+  // 3-dot menu
+  const dotHeader=el("div","dot-header");
+  const dotBtn=el("button","dot-header-btn","⋮");
+  let dropdownDiv=null;
+  dotBtn.addEventListener("click",(e)=>{ e.stopPropagation(); if(dropdownDiv){ dropdownDiv.remove(); dropdownDiv=null; } else{ dropdownDiv=el("div","header-dropdown"); dropdownDiv.innerHTML=`<button id="menuBulk">🗑 Bulk Delete</button><button id="menuExport">📎 Export Excel</button><button id="menuImport">📥 Import Excel</button><button id="menuCats">🏷️ Manage Categories</button>`; dropdownDiv.querySelector("#menuBulk").addEventListener("click",()=>{ if(tab!=="catalogue"){ toast("Switch to Catalogue tab first",true); return; } enterBulkMode(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuExport").addEventListener("click",()=>{ exportXL(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuImport").addEventListener("click",()=>{ triggerImport(); dropdownDiv?.remove(); dropdownDiv=null; }); dropdownDiv.querySelector("#menuCats").addEventListener("click",()=>{ sheet="categoryManager"; dropdownDiv?.remove(); dropdownDiv=null; render(); }); dotHeader.appendChild(dropdownDiv); } });
+  document.addEventListener("click",(e)=>{ if(!dotHeader.contains(e.target) && dropdownDiv){ dropdownDiv.remove(); dropdownDiv=null; } });
+  dotHeader.appendChild(dotBtn);
+  right.appendChild(dotHeader);
+  if(firestoreEnabled) right.appendChild(el("span","sync-badge","☁️"));
+  hdr.appendChild(right); app.appendChild(hdr);
+  // hidden file input
+  let fileInput=el("input",""); fileInput.type="file"; fileInput.accept=".xlsx,.xls"; fileInput.style.display="none"; fileInput.id="importFileInput"; fileInput.addEventListener("change",importXL);
+  app.appendChild(fileInput);
+  // tabs
   const tabs=el("div","toptabs");
-  [["catalogue","Catalogue"],["purchase","Purchase List"],["importexport","Import / Export"]].forEach(([v,l])=>{ const b=el("button","toptab"+(tab===v?" active":""),l); if(v==="purchase"&&pendingCount()){ const bd=el("span","tbadge",String(pendingCount())); b.appendChild(bd); } b.addEventListener("click",()=>{ tab=v; bulkMode=false; selectedProducts.clear(); openMenu=null; render(); }); tabs.appendChild(b); });
+  [["catalogue","Catalogue"],["purchase","Purchase List"]].forEach(([v,l])=>{
+    const b=el("button","toptab"+(tab===v?" active":""),l);
+    if(v==="purchase"&&pendingCount()){ let bd=el("span","tbadge",String(pendingCount())); b.appendChild(bd); }
+    b.addEventListener("click",()=>{ tab=v; bulkMode=false; selectedProducts.clear(); openMenu=null; render(); });
+    tabs.appendChild(b);
+  });
   app.appendChild(tabs);
+  // main content
   if(tab==="catalogue"){
     const sb=el("div","searchbar");
-    const si=el("input",""); si.placeholder="Search products..."; si.value=searchVal; si.addEventListener("input",e=>{ searchVal=e.target.value; renderCards(); });
-    const cs=selEl(["All",...categories],filterCat,e=>{ filterCat=e.target.value; renderCards(); }); cs.className=""; cs.style.cssText="flex:0 0 110px;border:1px solid #e0e0e0;border-radius:8px;padding:9px 10px;background:#fff;color:#111;font-size:14px";
-    const bulkBtn = el("button","hdr-btn bulk-mode-btn", bulkMode?"✓ Cancel Bulk":"🗑 Bulk Delete"); bulkBtn.style.marginLeft="8px"; bulkBtn.addEventListener("click",()=>{ if(bulkMode) cancelBulkMode(); else{ bulkMode=true; selectedProducts.clear(); renderCards(); renderBulkBar(); } });
-    sb.append(si, cs, bulkBtn); app.appendChild(sb);
+    const si=el("input",""); si.placeholder="Search..."; si.value=searchVal; si.addEventListener("input",e=>{ searchVal=e.target.value; renderCards(); });
+    const cs=sel(["All",...categories],filterCat,e=>{ filterCat=e.target.value; renderCards(); });
+    cs.style.width="110px";
+    sb.append(si,cs);
+    app.appendChild(sb);
     const cardsWrap=el("div",""); cardsWrap.id="cards-wrap"; app.appendChild(cardsWrap);
     renderCards();
-    if(bulkMode) renderBulkBar();
-    function renderBulkBar(){ const existing=document.getElementById("bulk-bar"); if(existing) existing.remove(); const bar=el("div","bulk-bar"); bar.id="bulk-bar"; bar.innerHTML=`<div class="bulk-info">${selectedProducts.size} selected</div><div class="bulk-actions"><button class="bulk-btn" id="selectAllBtn">Select all visible</button><button class="bulk-btn bulk-delete" id="bulkDeleteBtn">Delete selected</button><button class="bulk-btn bulk-cancel" id="bulkCancelBtn">Cancel</button></div>`; app.appendChild(bar); document.getElementById("selectAllBtn")?.addEventListener("click",selectAllVisible); document.getElementById("bulkDeleteBtn")?.addEventListener("click",bulkDeleteSelected); document.getElementById("bulkCancelBtn")?.addEventListener("click",cancelBulkMode); }
+    renderBulkBar();
   } else if(tab==="purchase"){
     app.appendChild(on(el("button","add-p-btn","+ Add to Purchase List"),"click",()=>{ ppf=blankPP(); editPId=null; sheet="purchase"; render(); }));
     const pendingDiv=el("div",""), doneDiv=el("div","");
-    const renderList=(list,container,title)=>{ if(!list.length) return; const hdrDiv=el("div","sec-hdr"); hdrDiv.appendChild(el("div","sec-title",title)); if(title==="Completed" && list.length) { const clearBtn=el("button","clear-btn","Clear all"); clearBtn.addEventListener("click",clearDone); hdrDiv.appendChild(clearBtn); } container.appendChild(hdrDiv); list.forEach(p=>{ const pc=el("div","p-card"+(p.done?" p-done":"")); const row=el("div","p-row"); const chk=el("input","p-check"); chk.type="checkbox"; chk.checked=!!p.done; chk.addEventListener("change",()=>toggleP(p.id)); const nameDiv=el("div","p-name",p.name); const sub=el("div","p-sub",p.qty+" × "+inr(p.buyPrice)); nameDiv.appendChild(sub); const priceSpan=el("div","p-price",inr((+p.qty)*(+p.buyPrice||0))); const acts=el("div","p-acts"); const editBtn=el("button","p-edit-btn","Edit"); editBtn.addEventListener("click",()=>{ ppf={...p}; editPId=p.id; sheet="purchase"; render(); }); const delBtn=el("button","p-del-btn","🗑"); delBtn.addEventListener("click",()=>delP(p.id)); acts.append(editBtn,delBtn); row.append(chk,nameDiv,priceSpan,acts); pc.appendChild(row); container.appendChild(pc); }); };
-    renderList(purchases.filter(p=>!p.done), pendingDiv, "To Buy"); renderList(purchases.filter(p=>p.done), doneDiv, "Completed");
+    const renderList=(list,container,title)=>{
+      if(!list.length) return;
+      const hdrDiv=el("div","sec-hdr"); hdrDiv.appendChild(el("div","sec-title",title));
+      if(title==="Completed" && list.length){ let clr=el("button","clear-btn","Clear all"); clr.addEventListener("click",clearDone); hdrDiv.appendChild(clr); }
+      container.appendChild(hdrDiv);
+      list.forEach(p=>{
+        const pc=el("div","p-card"+(p.done?" p-done":""));
+        const row=el("div","p-row");
+        const chk=el("input","p-check"); chk.type="checkbox"; chk.checked=!!p.done; chk.addEventListener("change",()=>toggleP(p.id));
+        const nameDiv=el("div","p-name",p.name); const sub=el("div","p-sub",p.qty+" × "+inr(p.buyPrice)); nameDiv.appendChild(sub);
+        const priceSpan=el("div","p-price",inr((+p.qty)*(+p.buyPrice||0)));
+        const acts=el("div","p-acts");
+        const editBtn=el("button","p-edit-btn","Edit"); editBtn.addEventListener("click",()=>{ ppf={...p}; editPId=p.id; sheet="purchase"; render(); });
+        const delBtn=el("button","p-del-btn","🗑"); delBtn.addEventListener("click",()=>delP(p.id));
+        acts.append(editBtn,delBtn);
+        row.append(chk,nameDiv,priceSpan,acts);
+        pc.appendChild(row);
+        container.appendChild(pc);
+      });
+    };
+    renderList(purchases.filter(p=>!p.done), pendingDiv, "To Buy");
+    renderList(purchases.filter(p=>p.done), doneDiv, "Completed");
     app.appendChild(pendingDiv); app.appendChild(doneDiv);
-  } else if(tab==="importexport"){
-    const wrapDiv=el("div","ie-wrap"); wrapDiv.innerHTML=`<div class="ie-card"><div class="ie-title">📤 Export Data</div><div class="ie-sub">Save catalogue + purchase list as Excel file</div><button class="ie-btn ie-green" id="exportBtn">⬇️ Export to Excel</button></div><div class="ie-card"><div class="ie-title">📥 Import Data</div><div class="ie-sub">Upload Excel (.xlsx) with product sheet</div><input type="file" id="importFile" accept=".xlsx,.xls" style="margin-top:6px"/><div class="ie-sub" style="margin-top:10px">✨ Duplicates (by name) are skipped. New categories added. Cloud sync automatic.</div></div>`;
-    app.appendChild(wrapDiv); document.getElementById("exportBtn")?.addEventListener("click",exportXL); document.getElementById("importFile")?.addEventListener("change",importXL);
   }
-  // sheets
-  if(sheet==="product") app.appendChild(el("div","overlay")).appendChild(renderProductSheet());
-  else if(sheet==="purchase") app.appendChild(el("div","overlay")).appendChild(renderPurchaseSheet());
-  else if(sheet==="rename") app.appendChild(el("div","overlay")).appendChild(renderRenameSheet());
-  else if(sheet==="categoryManager") app.appendChild(el("div","overlay")).appendChild(renderCategorySheet());
-  function renderProductSheet(){ const s=el("div","sheet"); s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">${editId?"Edit Product":"New Product"}</div>`; const fname=field("Product name",inp(pf.name,"",v=>pf.name=v)); const funit=field("Unit",inp(pf.unit,"e.g., per packet",v=>pf.unit=v)); const fcat=field("Category",categoryPicker(pf.category,v=>pf.category=v)); const fbuy=field("Buy Price (₹)",inp(pf.buyPrice,"0",v=>pf.buyPrice=v,"number")); const fsell=field("Sell Price (₹)",inp(pf.sellPrice,"0",v=>pf.sellPrice=v,"number")); const fpkt=field("Packet Price (₹)",inp(pf.packetPrice,"0",v=>pf.packetPrice=v,"number")); const saveBtn=el("button","save-btn","✓ Save"); saveBtn.addEventListener("click",saveProduct); const cancelBtn=el("button","cancel-btn","Cancel"); cancelBtn.addEventListener("click",()=>{sheet=null;render();}); s.append(fname,funit,fcat,fbuy,fsell,fpkt,saveBtn,cancelBtn); return s; }
-  function renderPurchaseSheet(){ const s=el("div","sheet"); s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">${editPId?"Edit Item":"Add to Purchase"}</div>`; const fname=field("Product name",inp(ppf.name,"",v=>ppf.name=v)); const fqty=field("Quantity",inp(ppf.qty,"1",v=>ppf.qty=v,"number")); const fprice=field("Buy Price (₹)",inp(ppf.buyPrice,"0",v=>ppf.buyPrice=v,"number")); const fnote=field("Note",inp(ppf.note,"",v=>ppf.note=v)); const saveBtn=el("button","save-btn","✓ Save"); saveBtn.addEventListener("click",savePurchase); const cancelBtn=el("button","cancel-btn","Cancel"); cancelBtn.addEventListener("click",()=>{sheet=null;render();}); s.append(fname,fqty,fprice,fnote,saveBtn,cancelBtn); return s; }
-  function renderRenameSheet(){ const s=el("div","sheet"); s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">Rename Catalogue</div>`; const inpName=el("input","finput"); inpName.value=catalogueName; const saveBtn=el("button","save-btn","Save name"); saveBtn.addEventListener("click",()=>saveCatalogueName(inpName.value)); const cancelBtn=el("button","cancel-btn","Cancel"); cancelBtn.addEventListener("click",()=>{sheet=null;render();}); s.append(inpName,saveBtn,cancelBtn); return s; }
-  function renderCategorySheet(){ const s=el("div","sheet"); s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">Manage Categories</div><div id="catList"></div><div class="cat-add-row"><input id="newCatInput" placeholder="New category"/><button id="addCatBtn" class="cat-add-btn">+ Add</button></div><button class="cancel-btn" style="margin-top:16px">Close</button>`; setTimeout(()=>{ const listDiv=s.querySelector("#catList"); categories.forEach(c=>{ const row=el("div","cat-item"); row.innerHTML=`<span>${c}</span><button class="cat-del" data-cat="${c}">🗑</button>`; row.querySelector(".cat-del")?.addEventListener("click",()=>delCat(c)); listDiv?.appendChild(row); }); const addBtn=s.querySelector("#addCatBtn"); const inpCat=s.querySelector("#newCatInput"); addBtn?.addEventListener("click",()=>{ newCat=inpCat.value; addCat(); inpCat.value=""; renderCategorySheet(); }); s.querySelector(".cancel-btn")?.addEventListener("click",()=>{sheet=null;render();}); },0); return s; }
-  function categoryPicker(val,onChange){ const wrapDiv=el("div","cat-picker"); const input=el("input","cat-picker-input"); input.placeholder="Select or type"; input.value=val; const arrow=el("div","cat-picker-arrow","⌵"); let dropdown=null; const closeDrop=()=>{ if(dropdown) dropdown.remove(); dropdown=null; }; const showDrop=()=>{ closeDrop(); dropdown=el("div","cat-dropdown"); categories.forEach(c=>{ const opt=el("div","cat-opt",c); if(c===val) opt.classList.add("selected"); opt.addEventListener("click",()=>{ input.value=c; onChange(c); closeDrop(); }); dropdown.appendChild(opt); }); const addOpt=el("div","cat-opt","+ Add new category..."); addOpt.style.color="#0d9e8a"; addOpt.addEventListener("click",()=>{ sheet="categoryManager"; render(); }); dropdown.appendChild(addOpt); wrapDiv.appendChild(dropdown); }; input.addEventListener("focus",showDrop); arrow.addEventListener("click",showDrop); document.addEventListener("click",function docClick(e){ if(!wrapDiv.contains(e.target)) closeDrop(); }); wrapDiv.appendChild(input); wrapDiv.appendChild(arrow); return wrapDiv; }
+  // sheets (product, purchase, rename, categoryManager)
+  if(sheet==="product"){
+    let s=el("div","sheet"); s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">${editId?"Edit Product":"New Product"}</div>`; s.appendChild(field("Product name",inp(pf.name,"",v=>pf.name=v))); s.appendChild(field("Unit",inp(pf.unit,"e.g., per packet",v=>pf.unit=v))); s.appendChild(field("Category",categoryPicker(pf.category,v=>pf.category=v))); s.appendChild(field("Buy Price (₹)",inp(pf.buyPrice,"0",v=>pf.buyPrice=v,"number"))); s.appendChild(field("Sell Price (₹)",inp(pf.sellPrice,"0",v=>pf.sellPrice=v,"number"))); s.appendChild(field("Packet Price (₹)",inp(pf.packetPrice,"0",v=>pf.packetPrice=v,"number"))); let save=el("button","save-btn","✓ Save"); save.addEventListener("click",saveProduct); let cancel=el("button","cancel-btn","Cancel"); cancel.addEventListener("click",()=>{sheet=null;render();}); s.append(save,cancel); let ov=el("div","overlay"); ov.appendChild(s); app.appendChild(ov);
+  } else if(sheet==="purchase"){
+    let s=el("div","sheet"); s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">${editPId?"Edit Item":"Add to Purchase"}</div>`; s.appendChild(field("Product name",inp(ppf.name,"",v=>ppf.name=v))); s.appendChild(field("Quantity",inp(ppf.qty,"1",v=>ppf.qty=v,"number"))); s.appendChild(field("Buy Price (₹)",inp(ppf.buyPrice,"0",v=>ppf.buyPrice=v,"number"))); s.appendChild(field("Note",inp(ppf.note,"",v=>ppf.note=v))); let saveP=el("button","save-btn","✓ Save"); saveP.addEventListener("click",savePurchase); let cancelP=el("button","cancel-btn","Cancel"); cancelP.addEventListener("click",()=>{sheet=null;render();}); s.append(saveP,cancelP); let ov=el("div","overlay"); ov.appendChild(s); app.appendChild(ov);
+  } else if(sheet==="rename"){
+    let s=el("div","sheet"); s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">Rename Catalogue</div>`; let inpName=el("input","finput"); inpName.value=catalogueName; let saveR=el("button","save-btn","Save"); saveR.addEventListener("click",()=>saveCatalogueName(inpName.value)); let cancelR=el("button","cancel-btn","Cancel"); cancelR.addEventListener("click",()=>{sheet=null;render();}); s.append(inpName,saveR,cancelR); let ov=el("div","overlay"); ov.appendChild(s); app.appendChild(ov);
+  } else if(sheet==="categoryManager"){
+    let s=el("div","sheet"); s.innerHTML=`<div class="sheet-handle"></div><div class="sheet-title">Manage Categories</div><div id="catList"></div><div class="cat-add-row" style="display:flex;gap:8px;margin-top:12px"><input id="newCatInput" placeholder="New category" style="flex:1;padding:10px;border-radius:10px;border:1px solid #ddd"/><button id="addCatBtn" style="padding:10px 16px;background:#111;color:#fff;border:none;border-radius:10px">+ Add</button></div><button class="cancel-btn" style="margin-top:16px">Close</button>`;
+    setTimeout(()=>{
+      const listDiv=s.querySelector("#catList");
+      categories.forEach(c=>{ let row=el("div","cat-item"); row.style.display="flex"; row.style.justifyContent="space-between"; row.style.padding="8px 0"; row.innerHTML=`<span>${c}</span><button class="cat-del" data-cat="${c}" style="background:none;border:none;color:#e33;font-size:18px">🗑</button>`; row.querySelector(".cat-del")?.addEventListener("click",()=>delCat(c)); listDiv.appendChild(row); });
+      const addBtn=s.querySelector("#addCatBtn"); const inpCat=s.querySelector("#newCatInput"); addBtn?.addEventListener("click",()=>{ newCat=inpCat.value; addCat(); inpCat.value=""; renderCategorySheet(); });
+      s.querySelector(".cancel-btn")?.addEventListener("click",()=>{sheet=null;render();});
+    },0);
+    let ov=el("div","overlay"); ov.appendChild(s); app.appendChild(ov);
+  }
 }
 initFirebase();
 </script>
 </body>
 </html>
-```
